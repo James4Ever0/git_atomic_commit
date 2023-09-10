@@ -1,6 +1,11 @@
 import os
 import sys
 
+REQUIRED_BINARIES = ['bash', 'timemachine', 'rsync']
+
+# you may find usable bash shell next to our git executable on windows, and it is preferred
+# because wsl bash sucks
+
 def get_script_path_and_exec_cmd(script_prefix):
     """
     Get the script path and the command to execute the script.
