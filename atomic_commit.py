@@ -37,7 +37,13 @@ class AtomicCommitConfig(EnvBaseModel):
     #     title="Backup mode configuration"
     #     # default=BackupMode.last_time_only, description="Backup mode configuration"
     # )
-    RCLONE_FLAGS: str = Field(default="", title="Commandline flags for rclone command")
+    INSTALL_DIR: str = Field(
+        default="",
+        title="Directory for installation (if set, after installation the program will exit)",
+    )
+    RCLONE_FLAGS: str = Field(
+        default="-P", title="Commandline flags for rclone command"
+    )
     BACKUP_UPDATE_CHECK_MODE: BackupUpdateCheckMode = Field(
         default=BackupUpdateCheckMode.commit_and_backup_flag_metadata,
         title="Determines necessarity of backup",
@@ -65,6 +71,7 @@ class AtomicCommitConfig(EnvBaseModel):
 # exit()
 
 config = getConfig(AtomicCommitConfig)
+
 
 # instead of 'where', we have `shutil.which`
 
@@ -168,10 +175,10 @@ for reqbin in REQUIRED_BINARIES:
         shutil.which(reqbin) is not None
     ), f"Required binary '{reqbin}' is not in PATH."
 
-import pytz
-import datetime
+# import pytz
+# import datetime
 
-TIMEZONE = ...
+# TIMEZONE = ...
 
 FSCK = f"{GIT} fsck"
 LOG_HASH = f'{GIT} log -1 --format=format:"%H"'
@@ -194,6 +201,59 @@ LOG_DIR = "logs"
 IGNORED_PATHS = [LOG_DIR, BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE, GITIGNORE_INPROGRESS]
 GIT_RM_CACHED_CMDGEN = lambda p: f"{GIT} rm -r --cached {p}"
 
+
+def git_fsck():
+    exit_code = os.system(FSCK)
+    success = exit_code == 0
+    logger_print(f"git fsck {'success' if success else 'failed'}")
+    return success
+
+
+from contextlib import contextmanager
+
+
+@contextmanager
+def chdir_context(dirpath: str):
+    cwd = os.getcwd()
+    os.chdir(dirpath)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+
+
+if config.INSTALL_DIR is not "":
+    if os.path.exists(config.INSTALL_DIR):
+        with chdir_context(config.INSTALL_DIR):
+            assert os.path.isdir(GITDIR), "Git directory not found!"
+            success = git_fsck()
+            if not success:
+                raise Exception("Target git repository is corrupted.")
+
+        localfiles = os.listdir(".")
+        target_dir_files = os.listdir(config.INSTALL_DIR)
+        install_files = [f for f in localfiles if f.endswith(".py")]
+        conflict_files = [f for f in install_files if f in target_dir_files]
+        if set(conflict_files) == set(install_files):
+            raise Exception(
+                "You probably have installed at directory %s" % config.INSTALL_DIR
+            )
+        if conflict_files != []:
+            err = [
+                f"Conflict file '{f}' found in target directory '{config.INSTALL_DIR}'"
+                for f in conflict_files
+            ]
+            raise Exception("\n".join(err))
+        for f in install_files:
+            target_fpath = os.path.join(config.INSTALL_DIR, f)
+            shutil.copy(f, target_fpath)
+        logger_print(f"Atomic commit script installed at: '{config.INSTALL_DIR}'")
+    else:
+        raise Exception(
+            f"Could not find installation directory at '{config.INSTALL_DIR}'"
+        )
+
+
 assert os.path.isdir(GITDIR), "Git directory not found!"
 if os.path.exists(BACKUP_BASE_DIR):
     if not os.path.isdir(BACKUP_BASE_DIR):
@@ -202,6 +262,7 @@ if os.path.exists(BACKUP_BASE_DIR):
         )
 else:
     os.mkdir(BACKUP_BASE_DIR)
+
 gitignore_content = ""
 existing_ignored_paths = []
 if os.path.exists(GITIGNORE):
@@ -229,13 +290,6 @@ if missing_ignored_paths != []:
         for p in existing_ignored_paths + missing_ignored_paths:
             f.write(line(p))
     shutil.move(GITIGNORE_INPROGRESS, GITIGNORE)
-
-
-def git_fsck():
-    exit_code = os.system(FSCK)
-    success = exit_code == 0
-    logger_print(f"git fsck {'success' if success else 'failed'}")
-    return success
 
 
 import subprocess
