@@ -189,8 +189,9 @@ INPROGRESS_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress")
 # INPROGRESS_INCREMENTAL_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress_incremental")
 # INCREMENTAL_BACKUP_DIR_FORMAT = ...
 # INCREMENTAL_BACKUP_DIR_GENERATOR = lambda: ...
-
-IGNORED_PATHS = [BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE, GITIGNORE_INPROGRESS]
+LOG_DIR = "logs"
+IGNORED_PATHS = [LOG_DIR, BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE, GITIGNORE_INPROGRESS]
+GIT_RM_CACHED_CMDGEN = lambda p: f"{GIT} rm -r --cached {p}"
 
 assert os.path.isdir(GITDIR), "Git directory not found!"
 if os.path.exists(BACKUP_BASE_DIR):
@@ -216,7 +217,10 @@ missing_ignored_paths = []
 for p in IGNORED_PATHS:
     if p not in existing_ignored_paths:
         missing_ignored_paths.append(p)
-breakpoint()
+        cmd = GIT_RM_CACHED_CMDGEN(p)
+        ret = os.system(cmd)
+        assert ret in [0, 128], f"error while removing path '{p}' from git cache"
+
 if missing_ignored_paths != []:
     with open(GITIGNORE_INPROGRESS, "w+") as f:
         if gitignore_content != "":
