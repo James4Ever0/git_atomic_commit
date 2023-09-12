@@ -471,10 +471,11 @@ def atomic_commit():
     can_commit = atomic_commit_common()
 
     if can_commit:
-        hash_before = get_last_backup_commit_hash()
+        hash_before = get_last_backup_commit_hash() 
         commit_success = commit()
         hash_after = get_last_backup_commit_hash()
         commit_hash_changed = hash_after != hash_before
+        breakpoint()
         if commit_success:
             if commit_hash_changed:
                 pathlib.Path(COMMIT_FLAG).touch()
