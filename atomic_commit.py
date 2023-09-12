@@ -1,9 +1,11 @@
 import os
 import sys
-
+from log_utils import logger_print
 import shutil
-from enum import StrEnum, auto
-import parse
+from enum import auto
+from strenum import StrEnum
+
+# import parse
 from config_utils import EnvBaseModel, getConfig
 import filelock
 import pathlib
@@ -14,9 +16,9 @@ class BackupUpdateCheckMode(StrEnum):
     git_commit_hash = auto()
 
 
-class BackupMode(StrEnum):
-    incremental = auto()
-    last_time_only = auto()
+# class BackupMode(StrEnum):
+#     incremental = auto()
+#     last_time_only = auto()
 
 
 class GitHeadHashAcquisitionMode(StrEnum):
@@ -30,11 +32,11 @@ from pydantic import Field
 
 
 class AtomicCommitConfig(EnvBaseModel):
-    BACKUP_MODE: BackupMode = Field(
-        default=BackupMode.last_time_only,
-        title="Backup mode configuration"
-        # default=BackupMode.last_time_only, description="Backup mode configuration"
-    )
+    # BACKUP_MODE: BackupMode = Field(
+    #     default=BackupMode.last_time_only,
+    #     title="Backup mode configuration"
+    #     # default=BackupMode.last_time_only, description="Backup mode configuration"
+    # )
     BACKUP_UPDATE_CHECK_MODE: BackupUpdateCheckMode = Field(
         default=BackupUpdateCheckMode.commit_and_backup_flag_metadata,
         title="Determines necessarity of backup",
@@ -58,7 +60,7 @@ class AtomicCommitConfig(EnvBaseModel):
 # args = parser.parse_typed_args()
 
 # Print Args
-# print(args)
+# logger_print(args)
 # exit()
 
 config = getConfig(AtomicCommitConfig)
@@ -152,7 +154,7 @@ config = getConfig(AtomicCommitConfig)
 
 
 # for path in where('git'): # multiple git now.
-#   print(path)
+#   logger_print(path)
 
 # use rclone instead?
 REQUIRED_BINARIES = [RCLONE := "rclone", GIT := "git"]
@@ -175,19 +177,20 @@ LOG_HASH = f'{GIT} log -1 --format=format:"%H"'
 REV_PARSE_HASH = f"{GIT} rev-parse HEAD"
 
 GITIGNORE = ".gitignore"
+GITIGNORE_INPROGRESS = ".inprogress_gitignore"
 GITDIR = ".git"
 COMMIT_FLAG = ".atomic_commit_flag"
 LOCKFILE = ".atomic_commit_lock"
-LOCK_TIMEOUT = 3
+LOCK_TIMEOUT = 5
 BACKUP_BASE_DIR = ".git_backup"
 BACKUP_GIT_DIR = os.path.join(BACKUP_BASE_DIR, GITDIR)
 BACKUP_FLAG = os.path.join(BACKUP_BASE_DIR, ".atomic_backup_flag")
 INPROGRESS_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress")
-INPROGRESS_INCREMENTAL_BACKUP_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress_backup")
-INCREMENTAL_BACKUP_DIR_FORMAT = ...
-INCREMENTAL_BACKUP_DIR_GENERATOR = lambda: ...
+# INPROGRESS_INCREMENTAL_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress_incremental")
+# INCREMENTAL_BACKUP_DIR_FORMAT = ...
+# INCREMENTAL_BACKUP_DIR_GENERATOR = lambda: ...
 
-IGNORED_PATHS = [BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE]
+IGNORED_PATHS = [BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE, GITIGNORE_INPROGRESS]
 
 assert os.path.isdir(GITDIR), "Git directory not found!"
 if os.path.exists(BACKUP_BASE_DIR):
@@ -197,11 +200,37 @@ if os.path.exists(BACKUP_BASE_DIR):
         )
 else:
     os.mkdir(BACKUP_BASE_DIR)
+gitignore_content = ""
+existing_ignored_paths = []
+if os.path.exists(GITIGNORE):
+    if os.path.isfile(GITIGNORE):
+        with open(GITIGNORE, "r") as f:
+            gitignore_content = f.read()
+            existing_ignored_paths = gitignore_content.split("\n")
+            existing_ignored_paths = [t.strip() for t in existing_ignored_paths]
+            existing_ignored_paths = [t for t in existing_ignored_paths if len(t) > 0]
+
+line = lambda s: f"{s.strip()}\n"
+missing_ignored_paths = []
+
+for p in IGNORED_PATHS:
+    if p not in existing_ignored_paths:
+        missing_ignored_paths.append(p)
+
+if missing_ignored_paths != []:
+    with open(GITIGNORE_INPROGRESS, "w+") as f:
+        if gitignore_content != "":
+            f.write(line(gitignore_content))
+        for p in existing_ignored_paths + missing_ignored_paths:
+            f.write(line(p))
+    shutil.move(GITIGNORE_INPROGRESS, GITIGNORE)
 
 
 def git_fsck():
     exit_code = os.system(FSCK)
-    return exit_code == 0
+    success = exit_code == 0
+    logger_print(f"git fsck {'success' if success else 'failed'}")
+    return success
 
 
 import subprocess
@@ -249,7 +278,7 @@ def get_script_path_and_exec_cmd(script_prefix):
             script_path
         ), f"failed to find os native implementation of commit script: {script_path}"
     else:
-        print(f"using os independent implementation of commit: '{script_path}'")
+        logger_print(f"using os independent implementation of commit: '{script_path}'")
 
     cmd = f"{exec_prefix} {script_path}"
     return script_path, cmd
@@ -260,26 +289,29 @@ def get_script_path_and_exec_cmd(script_prefix):
 # default skip check: mod-time & size
 BACKUP_COMMAND_COMMON = f"{RCLONE} sync {GITDIR} {INPROGRESS_DIR}"
 
-if config.BACKUP_MODE == BackupMode.last_time_only:
-    BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
-else:
-    # take care of last backup!
-    BACKUP_COMMAND_GEN = (
-        lambda: f"{BACKUP_COMMAND_COMMON} '--backup-dir={INPROGRESS_INCREMENTAL_BACKUP_DIR}'"
-    )
+ROLLBACK_COMMAND = f"{RCLONE} sync {BACKUP_GIT_DIR} {GITDIR}"
+
+# if config.BACKUP_MODE == BackupMode.last_time_only:
+BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
+# else:
+#     # take care of last backup!
+#     BACKUP_COMMAND_GEN = (
+#         lambda: f"{BACKUP_COMMAND_COMMON} '--backup-dir={INPROGRESS_INCREMENTAL_BACKUP_DIR}'"
+#     )
 
 
 def backup():
-    shutil.move(BACKUP_GIT_DIR, INPROGRESS_DIR)
+    if os.path.exists(BACKUP_GIT_DIR):
+        shutil.move(BACKUP_GIT_DIR, INPROGRESS_DIR)
     backup_command = BACKUP_COMMAND_GEN()
     ret = os.system(backup_command)
     success = ret == 0
     assert success, f"Backup command failed with exit code {ret}"
     # then we move folders into places.
     shutil.move(INPROGRESS_DIR, BACKUP_GIT_DIR)
-    if config.BACKUP_MODE == BackupMode.incremental:
-        incremental_backup_dir = INCREMENTAL_BACKUP_DIR_GENERATOR()
-        shutil.move(INPROGRESS_INCREMENTAL_BACKUP_DIR, incremental_backup_dir)
+    # if config.BACKUP_MODE == BackupMode.incremental:
+    #     incremental_backup_dir = INCREMENTAL_BACKUP_DIR_GENERATOR()
+    #     shutil.move(INPROGRESS_INCREMENTAL_BACKUP_DIR, incremental_backup_dir)
     # create backup flag.
     if (
         config.BACKUP_UPDATE_CHECK_MODE
@@ -359,6 +391,24 @@ def atomic_backup():
     return success
 
 
+#####################################
+# RCLONE BACKUP RESTORATION DIAGRAM #
+#####################################
+#
+# time
+#  |   current   | back_0 | back_1 | back_2 |  state   |
+#  |-------------|--------|--------|--------|----------|
+# 0| a b c       |  *     |  *     |        | *a *b *c |
+# 1|       +d    |        |        |     *  | a b c *d |
+# 2|     -c      |  c     |        |        |  a b d   |
+# 3|   +b+c      |        |  b     |        | a *b d *c|
+# 4|       -d    |        |        |     d  |  a b    c|
+#
+# unless you make modification records with timestamp per state, you cannot restore every state.
+# given its complexity, let's not do it.
+#
+
+
 def rollback():
     # do we have incomplete backup? if so, we cannot rollback.
     success = False
@@ -366,8 +416,15 @@ def rollback():
     if incomplete:
         raise Exception("Backup is incomplete. Cannot rollback.")
     else:
-        if config.BACKUP_MODE == BackupMode.incremental:
-            ...
+        return_code = os.system(ROLLBACK_COMMAND)
+        assert (
+            return_code == 0
+        ), f"Running rollback command failed with exit code {return_code}"
+        # if config.BACKUP_MODE == BackupMode.incremental:
+        # ...  # group files based on modification time, or `--min-age`
+        # # selected files in main dir along with files from backup dir
+        git_not_corrupted = git_fsck()
+        success = git_not_corrupted
     return success
 
 
@@ -424,11 +481,11 @@ def atomic_commit():
 
 
 def atomic_commit_common():
-    git_corrupted = True
+    git_not_corrupted = False
     can_commit = False
-    git_corrupted = git_fsck()
+    git_not_corrupted = git_fsck()
 
-    if git_corrupted:
+    if not git_not_corrupted:
         if rollback():
             can_commit = True
     else:

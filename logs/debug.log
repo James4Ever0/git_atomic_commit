@@ -296,3 +296,205 @@ pydantic type 'unknown' does not have corresponding python type. falling back to
 property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
 2023-09-12T15:14:21.092+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
 pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:16:22.617+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:16:22.617123]++++++++++++++++++++
+2023-09-13T01:16:22.617+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:16:22.952+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:16:22.952+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:16:22.952+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:16:22.952+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:16:22.953+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:16:23.205+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "atomic_commit.py", line 496, in <module>
+    success = atomic_commit()
+              └ <function atomic_commit at 0x104224550>
+  File "atomic_commit.py", line 464, in atomic_commit
+    can_commit = atomic_commit_common()
+                 └ <function atomic_commit_common at 0x1042245e0>
+  File "atomic_commit.py", line 486, in atomic_commit_common
+    if rollback():
+  File "atomic_commit.py", line 417, in rollback
+    assert (
+AssertionError: Running rollback command failed with exit code 768
+
+2023-09-13T01:19:22.647+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:19:22.647756]++++++++++++++++++++
+2023-09-13T01:19:22.648+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:19:22.986+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:19:22.986+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:19:22.986+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:19:22.986+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:19:22.987+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:19:23.004+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
+2023-09-13T01:19:23.211+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "atomic_commit.py", line 498, in <module>
+    success = atomic_commit()
+              └ <function atomic_commit at 0x116fda670>
+  File "atomic_commit.py", line 466, in atomic_commit
+    can_commit = atomic_commit_common()
+                 └ <function atomic_commit_common at 0x116fda700>
+  File "atomic_commit.py", line 488, in atomic_commit_common
+    if rollback():
+  File "atomic_commit.py", line 419, in rollback
+    assert (
+AssertionError: Running rollback command failed with exit code 768
+
+2023-09-13T01:19:50.914+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:19:50.914823]++++++++++++++++++++
+2023-09-13T01:19:50.914+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:19:51.254+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:19:51.254+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:19:51.254+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:19:51.255+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:19:51.256+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:19:51.281+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
+2023-09-13T01:19:51.476+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "atomic_commit.py", line 498, in <module>
+    success = atomic_commit()
+              └ <function atomic_commit at 0x115467670>
+  File "atomic_commit.py", line 466, in atomic_commit
+    can_commit = atomic_commit_common()
+                 └ <function atomic_commit_common at 0x115467700>
+  File "atomic_commit.py", line 488, in atomic_commit_common
+    if rollback():
+  File "atomic_commit.py", line 419, in rollback
+    assert (
+AssertionError: Running rollback command failed with exit code 768
+
+2023-09-13T01:21:21.339+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:21:21.339428]++++++++++++++++++++
+2023-09-13T01:21:21.339+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:21:21.681+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:21:21.681+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:21:21.681+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:21:21.681+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:21:21.682+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:21:21.712+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
+2023-09-13T01:21:21.729+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/shutil.py", line 791, in move
+    os.rename(src, real_dst)
+    │         │    └ '.git_backup/.inprogress'
+    │         └ '.git_backup/.git'
+    └ <module 'os' from '/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/os.py'>
+FileNotFoundError: [Errno 2] No such file or directory: '.git_backup/.git' -> '.git_backup/.inprogress'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "atomic_commit.py", line 498, in <module>
+    success = atomic_commit()
+              └ <function atomic_commit at 0x103c6e670>
+  File "atomic_commit.py", line 466, in atomic_commit
+    can_commit = atomic_commit_common()
+                 └ <function atomic_commit_common at 0x103c6e700>
+  File "atomic_commit.py", line 491, in atomic_commit_common
+    if atomic_backup():
+  File "atomic_commit.py", line 387, in atomic_backup
+    success = backup()
+    │         └ <function backup at 0x103c6e310>
+    └ False
+  File "atomic_commit.py", line 304, in backup
+    shutil.move(BACKUP_GIT_DIR, INPROGRESS_DIR)
+    │           │               └ '.git_backup/.inprogress'
+    │           └ '.git_backup/.git'
+    └ <module 'shutil' from '/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/shuti...
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/shutil.py", line 811, in move
+    copy_function(src, real_dst)
+    │             │    └ '.git_backup/.inprogress'
+    │             └ '.git_backup/.git'
+    └ <function copy2 at 0x1013cb5e0>
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/shutil.py", line 435, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+    │        │    │                    └ True
+    │        │    └ '.git_backup/.inprogress'
+    │        └ '.git_backup/.git'
+    └ <function copyfile at 0x1013cb310>
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/shutil.py", line 264, in copyfile
+    with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+FileNotFoundError: [Errno 2] No such file or directory: '.git_backup/.git'
+
+2023-09-13T01:26:13.722+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:26:13.722500]++++++++++++++++++++
+2023-09-13T01:26:13.722+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:26:14.040+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:26:14.041+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:26:14.041+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:26:14.041+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:26:14.042+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:26:14.074+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
