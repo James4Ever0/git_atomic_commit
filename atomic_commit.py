@@ -252,7 +252,7 @@ if config.INSTALL_DIR is not "":
         raise Exception(
             f"Could not find installation directory at '{config.INSTALL_DIR}'"
         )
-
+    exit(0)
 
 assert os.path.isdir(GITDIR), "Git directory not found!"
 if os.path.exists(BACKUP_BASE_DIR):
