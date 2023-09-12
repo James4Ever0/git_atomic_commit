@@ -291,9 +291,9 @@ def get_script_path_and_exec_cmd(script_prefix):
 # deadlock: if both backup integrity & fsck failed, what to do?
 # when backup is done, put head hash as marker
 # default skip check: mod-time & size
-BACKUP_COMMAND_COMMON = f"{RCLONE} sync -P -vv {GITDIR} {INPROGRESS_DIR}"
+BACKUP_COMMAND_COMMON = f"{RCLONE} sync -P {GITDIR} {INPROGRESS_DIR}"
 
-ROLLBACK_COMMAND = f"{RCLONE} sync -P -vv {BACKUP_GIT_DIR} {GITDIR}"
+ROLLBACK_COMMAND = f"{RCLONE} sync -P {BACKUP_GIT_DIR} {GITDIR}"
 
 # if config.BACKUP_MODE == BackupMode.last_time_only:
 BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
