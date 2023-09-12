@@ -246,7 +246,7 @@ def get_git_head_hash():
     else:
         cmd = REV_PARSE_HASH
 
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE)
+    proc = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
     assert (
         code := proc.returncode
     ) == 0, f"Checking lastest commit hash failed with exit code {code}."
@@ -471,9 +471,9 @@ def atomic_commit():
     can_commit = atomic_commit_common()
 
     if can_commit:
-        hash_before = get_last_backup_commit_hash() 
+        hash_before = get_git_head_hash() 
         commit_success = commit()
-        hash_after = get_last_backup_commit_hash()
+        hash_after = get_git_head_hash()
         commit_hash_changed = hash_after != hash_before
         breakpoint()
         if commit_success:
