@@ -570,3 +570,27 @@ BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata
 GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
 2023-09-13T01:29:14.058+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
 git fsck success
+2023-09-13T01:29:15.816+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
+2023-09-13T01:29:31.851+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:236' - <module>()]
++++++++++++++++++++++[START LOGGING AT: 2023-09-13T01:29:31.851037]++++++++++++++++++++
+2023-09-13T01:29:31.851+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/log_utils.py:276' - <module>()]
+logging started at directory: 
+
+/Volumes/Toshiba XG3/works/git_atomic_commit
+2023-09-13T01:29:32.195+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-13T01:29:32.195+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:29:32.195+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-13T01:29:32.195+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-13T01:29:32.196+08:00 <microgrid:DEBUG> ['/Volumes/Toshiba XG3/works/git_atomic_commit/config_utils.py:256' - load()]
+Loaded environment variables:
+
+BACKUP_UPDATE_CHECK_MODE:	<BackupUpdateCheckMode.commit_and_backup_flag_metadata: 'commit_and_backup_flag_metadata'>
+
+GIT_HEAD_HASH_ACQUISITION_MODE:	<GitHeadHashAcquisitionMode.rev_parse: 'rev_parse'>
+2023-09-13T01:29:32.229+08:00 <microgrid:DEBUG> ['atomic_commit.py:232' - git_fsck()]
+git fsck success
