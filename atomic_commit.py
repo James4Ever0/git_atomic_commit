@@ -216,7 +216,7 @@ missing_ignored_paths = []
 for p in IGNORED_PATHS:
     if p not in existing_ignored_paths:
         missing_ignored_paths.append(p)
-
+breakpoint()
 if missing_ignored_paths != []:
     with open(GITIGNORE_INPROGRESS, "w+") as f:
         if gitignore_content != "":
