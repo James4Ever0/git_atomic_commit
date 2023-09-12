@@ -1,0 +1,298 @@
+2023-09-12T14:48:30.113+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:48:30.113117]++++++++++++++++++++++++++++
+2023-09-12T14:48:30.114+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:48:32.357+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\error_utils.py:85' - __exit__()]
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 54, in __init__
+    pydantic_type = prop.pop("type")
+                    ^^^^^^^^^^^^^^^^
+KeyError: 'type'
+
+2023-09-12T14:48:32.773+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\atomic_commit.py", line 42, in <module>
+    config = getConfig(AtomicCommitConfig)
+             │         └ <class '__main__.AtomicCommitConfig'>
+             └ <function getConfig at 0x00000207E8EC2A20>
+  File "E:\works\git_atomic_commit\config_utils.py", line 343, in getConfig
+    config: T = envConfigClass.load()
+            │   └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+            └ ~T
+  File "E:\works\git_atomic_commit\config_utils.py", line 254, in load
+    params = cls.manager_cls.load()
+             └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 225, in load
+    argumentEnvInst = cls.argumentEnv.load()
+                      └ <class 'config_utils.getEnvManagerClass.<locals>.env_manager_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 100, in load
+    trans = ArgumentTransformer(cls)
+            │                   └ <class 'config_utils.extendEnvClass.<locals>.extended_env_class'>
+            └ <class 'argparse_utils.ArgumentTransformer'>
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 54, in __init__
+    pydantic_type = prop.pop("type")
+                    └ {'title': 'Backup mode configuration', 'default': 'last_time_only', 'allOf': [{'$ref': '#/definitions/BackupMode'}]}
+KeyError: 'type'
+
+2023-09-12T14:49:04.816+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:49:04.816300]++++++++++++++++++++++++++++
+2023-09-12T14:49:04.817+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:49:05.072+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T14:49:05.074+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:05.074+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T14:49:05.074+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:05.075+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T14:49:05.075+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:29.871+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:49:29.871455]++++++++++++++++++++++++++++
+2023-09-12T14:49:29.872+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:49:30.126+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T14:49:30.127+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:30.127+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T14:49:30.128+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:30.128+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T14:49:30.128+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:32.475+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:49:32.475875]++++++++++++++++++++++++++++
+2023-09-12T14:49:32.477+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:49:32.704+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T14:49:32.705+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:32.706+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T14:49:32.706+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:32.706+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:79' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T14:49:32.707+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:85' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:49:40.477+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:49:40.477333]++++++++++++++++++++++++++++
+2023-09-12T14:49:40.478+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:49:58.531+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\error_utils.py:85' - __exit__()]
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    pytype = pydantic_type_to_pytype.get(pydantic_type, None)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    pytype = pydantic_type_to_pytype.get(pydantic_type, None)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+
+2023-09-12T14:49:58.627+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\atomic_commit.py", line 42, in <module>
+    config = getConfig(AtomicCommitConfig)
+             │         └ <class '__main__.AtomicCommitConfig'>
+             └ <function getConfig at 0x000002247F73A7A0>
+  File "E:\works\git_atomic_commit\config_utils.py", line 343, in getConfig
+    config: T = envConfigClass.load()
+            │   └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+            └ ~T
+  File "E:\works\git_atomic_commit\config_utils.py", line 254, in load
+    params = cls.manager_cls.load()
+             └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 225, in load
+    argumentEnvInst = cls.argumentEnv.load()
+                      └ <class 'config_utils.getEnvManagerClass.<locals>.env_manager_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 100, in load
+    trans = ArgumentTransformer(cls)
+            │                   └ <class 'config_utils.extendEnvClass.<locals>.extended_env_class'>
+            └ <class 'argparse_utils.ArgumentTransformer'>
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    pytype = pydantic_type_to_pytype.get(pydantic_type, None)
+             │                           └ 'unknown'
+             └ {'integer': <class 'int'>, 'number': <class 'float'>, 'string': <class 'str'>, 'boolean': <class 'bool'>}
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    pytype = pydantic_type_to_pytype.get(pydantic_type, None)
+             │                           └ 'unknown'
+             └ {'integer': <class 'int'>, 'number': <class 'float'>, 'string': <class 'str'>, 'boolean': <class 'bool'>}
+  File "C:\Python311\Lib\bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           │                  └ <frame at 0x000002247F558970, file 'E:\\works\\git_atomic_commit\\argparse_utils.py', line 57, code __init__>
+           └ <pdb.Pdb object at 0x000002247F74C490>
+  File "C:\Python311\Lib\bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+       │                    └ <class 'bdb.BdbQuit'>
+       └ <pdb.Pdb object at 0x000002247F74C490>
+bdb.BdbQuit
+
+2023-09-12T14:50:06.624+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:50:06.624976]++++++++++++++++++++++++++++
+2023-09-12T14:50:06.626+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:51:47.470+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\error_utils.py:85' - __exit__()]
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    # annotated_type = self.dataModel.__annotations__.get(field)  # .__name__?
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    # annotated_type = self.dataModel.__annotations__.get(field)  # .__name__?
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python311\Lib\bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+
+2023-09-12T14:51:47.570+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:256' - logger_excepthook()]
+<TOPLEVEL EXCEPTION>
+
+Traceback (most recent call last):
+  File "E:\works\git_atomic_commit\atomic_commit.py", line 42, in <module>
+    config = getConfig(AtomicCommitConfig)
+             │         └ <class '__main__.AtomicCommitConfig'>
+             └ <function getConfig at 0x00000262F516A660>
+  File "E:\works\git_atomic_commit\config_utils.py", line 343, in getConfig
+    config: T = envConfigClass.load()
+            │   └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+            └ ~T
+  File "E:\works\git_atomic_commit\config_utils.py", line 254, in load
+    params = cls.manager_cls.load()
+             └ <class 'config_utils.getEnvConfigClass.<locals>.env_config_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 225, in load
+    argumentEnvInst = cls.argumentEnv.load()
+                      └ <class 'config_utils.getEnvManagerClass.<locals>.env_manager_class'>
+  File "E:\works\git_atomic_commit\config_utils.py", line 100, in load
+    trans = ArgumentTransformer(cls)
+            │                   └ <class 'config_utils.extendEnvClass.<locals>.extended_env_class'>
+            └ <class 'argparse_utils.ArgumentTransformer'>
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    # annotated_type = self.dataModel.__annotations__.get(field)  # .__name__?
+  File "E:\works\git_atomic_commit\argparse_utils.py", line 57, in __init__
+    # annotated_type = self.dataModel.__annotations__.get(field)  # .__name__?
+  File "C:\Python311\Lib\bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           │                  └ <frame at 0x00000262F4F98970, file 'E:\\works\\git_atomic_commit\\argparse_utils.py', line 57, code __init__>
+           └ <pdb.Pdb object at 0x00000262F517FF10>
+  File "C:\Python311\Lib\bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+       │                    └ <class 'bdb.BdbQuit'>
+       └ <pdb.Pdb object at 0x00000262F517FF10>
+bdb.BdbQuit
+
+2023-09-12T14:51:56.371+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:51:56.371340]++++++++++++++++++++++++++++
+2023-09-12T14:51:56.372+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:51:56.608+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T14:51:56.609+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:51:56.609+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T14:51:56.609+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:51:56.610+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T14:51:56.610+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:52:43.135+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T14:52:43.135734]++++++++++++++++++++++++++++
+2023-09-12T14:52:43.136+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T14:52:43.354+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T14:52:43.356+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:52:43.356+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T14:52:43.356+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T14:52:43.357+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T14:52:43.357+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T15:06:47.964+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:06:47.964187]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:06:47.964+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:07:09.773+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:07:09.773038]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:07:09.773+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:09:27.765+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:09:27.765672]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:09:27.776+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:10:08.985+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:10:08.985811]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:10:08.985+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:13:25.286+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:13:25.286497]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:13:25.286+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:14:20.877+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:236' - <module>()]
+++++++++++++++++++++++++++++++++++++++++++++[START LOGGING AT: 2023-09-12T15:14:20.876038]+++++++++++++++++++++++++++++++++++++++++++
+2023-09-12T15:14:20.877+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\log_utils.py:276' - <module>()]
+logging started at directory: 
+
+E:\works\git_atomic_commit
+2023-09-12T15:14:21.091+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_MODE' does not have translation. skipping...
+2023-09-12T15:14:21.091+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T15:14:21.092+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'BACKUP_UPDATE_CHECK_MODE' does not have translation. skipping...
+2023-09-12T15:14:21.092+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
+2023-09-12T15:14:21.092+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:77' - __init__()]
+property key 'allOf' of field 'GIT_HEAD_HASH_ACQUISITION_MODE' does not have translation. skipping...
+2023-09-12T15:14:21.092+08:00 <microgrid:DEBUG> ['E:\works\git_atomic_commit\argparse_utils.py:83' - __init__()]
+pydantic type 'unknown' does not have corresponding python type. falling back to str
