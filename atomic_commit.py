@@ -37,6 +37,7 @@ class AtomicCommitConfig(EnvBaseModel):
     #     title="Backup mode configuration"
     #     # default=BackupMode.last_time_only, description="Backup mode configuration"
     # )
+    RCLONE_FLAGS: str = Field(default="", title="Commandline flags for rclone command")
     BACKUP_UPDATE_CHECK_MODE: BackupUpdateCheckMode = Field(
         default=BackupUpdateCheckMode.commit_and_backup_flag_metadata,
         title="Determines necessarity of backup",
@@ -291,9 +292,10 @@ def get_script_path_and_exec_cmd(script_prefix):
 # deadlock: if both backup integrity & fsck failed, what to do?
 # when backup is done, put head hash as marker
 # default skip check: mod-time & size
-BACKUP_COMMAND_COMMON = f"{RCLONE} sync -P {GITDIR} {INPROGRESS_DIR}"
+rclone_flags = " " + config.RCLONE_FLAGS if config.RCLONE_FLAGS != "" else ""
+BACKUP_COMMAND_COMMON = f"{RCLONE} sync {GITDIR} {INPROGRESS_DIR}" + rclone_flags
 
-ROLLBACK_COMMAND = f"{RCLONE} sync -P {BACKUP_GIT_DIR} {GITDIR}"
+ROLLBACK_COMMAND = f"{RCLONE} sync {BACKUP_GIT_DIR} {GITDIR}" + rclone_flags
 
 # if config.BACKUP_MODE == BackupMode.last_time_only:
 BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
@@ -471,11 +473,10 @@ def atomic_commit():
     can_commit = atomic_commit_common()
 
     if can_commit:
-        hash_before = get_git_head_hash() 
+        hash_before = get_git_head_hash()
         commit_success = commit()
         hash_after = get_git_head_hash()
         commit_hash_changed = hash_after != hash_before
-        breakpoint()
         if commit_success:
             if commit_hash_changed:
                 pathlib.Path(COMMIT_FLAG).touch()
