@@ -191,9 +191,10 @@ REV_PARSE_HASH = f"{GIT} rev-parse HEAD"
 
 GITIGNORE = ".gitignore"
 GITIGNORE_INPROGRESS = ".inprogress_gitignore"
+GITIGNORE_BACKUP = f"{GITIGNORE}_backup"
 GITDIR = ".git"
 COMMIT_FLAG = ".atomic_commit_flag"
-LOCKFILE = ".atomic_commit_lock"
+LOCKFILE = f".atomic_commit_lock{'_nt' if os.name == 'nt' else ''}"
 LOCK_TIMEOUT = 5
 BACKUP_BASE_DIR = ".git_backup"
 BACKUP_GIT_DIR = os.path.join(BACKUP_BASE_DIR, GITDIR)
@@ -272,6 +273,14 @@ else:
 
 gitignore_content = ""
 existing_ignored_paths = []
+
+if os.path.exists(GITIGNORE_BACKUP):
+    if os.path.exists(GITIGNORE):
+        raise Exception(f"Both '{GITIGNORE}' and '{GITIGNORE_BACKUP}' exist. Cannot recover.")
+    else:
+        print(f"Restoring '{GITIGNORE}' from backup")
+        shutil.move(GITIGNORE_BACKUP, GITIGNORE)
+
 if os.path.exists(GITIGNORE):
     if os.path.isfile(GITIGNORE):
         with open(GITIGNORE, "r") as f:
@@ -290,13 +299,20 @@ for p in IGNORED_PATHS:
         ret = os.system(cmd)
         assert ret in [0, 128], f"error while removing path '{p}' from git cache"
 
+has_gitignore = False
 if missing_ignored_paths != []:
     with open(GITIGNORE_INPROGRESS, "w+") as f:
         if gitignore_content != "":
             f.write(line(gitignore_content))
         for p in existing_ignored_paths + missing_ignored_paths:
             f.write(line(p))
+    if os.path.exists(GITIGNORE):
+        has_gitignore = True
+        shutil.move(GITIGNORE, GITIGNORE_BACKUP)
     shutil.move(GITIGNORE_INPROGRESS, GITIGNORE)
+    if has_gitignore:
+        os.remove(GITIGNORE_BACKUP)
+    
 
 
 import subprocess
@@ -595,7 +611,7 @@ def atomic_commit_common():
 
 
 if __name__ == "__main__":
-    with filelock.FileLock(LOCKFILE+"1", timeout=LOCK_TIMEOUT) as lockfile:
+    with filelock.FileLock(LOCKFILE, timeout=LOCK_TIMEOUT) as lockfile:
         success = atomic_commit()
         if not success:
             raise Exception("Failed to perform atomic commit.")
