@@ -211,7 +211,7 @@ GIT_RM_CACHED_CMDGEN = lambda p: f"{GIT} rm -r --cached {p}"
 def git_fsck():
     exit_code = os.system(FSCK)
     success = exit_code == 0
-    logger_print(f"git fsck {'success' if success else 'failed'}")
+    logger_print(f"{GIT} fsck {'success' if success else 'failed'} at: {os.path.abspath('.')}")
     return success
 
 
@@ -299,7 +299,6 @@ for p in IGNORED_PATHS:
         ret = os.system(cmd)
         assert ret in [0, 128], f"error while removing path '{p}' from git cache"
 
-# breakpoint()
 has_gitignore = False
 if missing_ignored_paths != []:
     with open(GITIGNORE_INPROGRESS, "w+") as f:
