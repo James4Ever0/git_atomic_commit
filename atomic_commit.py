@@ -10,6 +10,8 @@ from config_utils import EnvBaseModel, getConfig
 import filelock
 import pathlib
 
+# TODO: automatic configure git safe directory
+
 
 class BackupUpdateCheckMode(StrEnum):
     commit_and_backup_flag_metadata = auto()
@@ -40,6 +42,9 @@ class AtomicCommitConfig(EnvBaseModel):
     INSTALL_DIR: str = Field(
         default="",
         title="Directory for installation (if set, after installation the program will exit)",
+    )
+    SKIP_CONFLICT_CHECK: bool = Field(
+        default=False, title="Skip duplication/conflict checks during installation."
     )
     RCLONE_FLAGS: str = Field(
         default="-P", title="Commandline flags for rclone command"
@@ -222,7 +227,8 @@ def chdir_context(dirpath: str):
         os.chdir(cwd)
 
 
-if config.INSTALL_DIR is not "":
+if config.INSTALL_DIR != "":
+    # if config.INSTALL_DIR is not "":
     if os.path.exists(config.INSTALL_DIR):
         with chdir_context(config.INSTALL_DIR):
             assert os.path.isdir(GITDIR), "Git directory not found!"
@@ -231,19 +237,20 @@ if config.INSTALL_DIR is not "":
                 raise Exception("Target git repository is corrupted.")
 
         localfiles = os.listdir(".")
-        target_dir_files = os.listdir(config.INSTALL_DIR)
         install_files = [f for f in localfiles if f.endswith(".py")]
-        conflict_files = [f for f in install_files if f in target_dir_files]
-        if set(conflict_files) == set(install_files):
-            raise Exception(
-                "You probably have installed at directory %s" % config.INSTALL_DIR
-            )
-        if conflict_files != []:
-            err = [
-                f"Conflict file '{f}' found in target directory '{config.INSTALL_DIR}'"
-                for f in conflict_files
-            ]
-            raise Exception("\n".join(err))
+        if not config.SKIP_CONFLICT_CHECK:
+            target_dir_files = os.listdir(config.INSTALL_DIR)
+            conflict_files = [f for f in install_files if f in target_dir_files]
+            if set(conflict_files) == set(install_files):
+                raise Exception(
+                    "You probably have installed at directory %s" % config.INSTALL_DIR
+                )
+            if conflict_files != []:
+                err = [
+                    f"Conflict file '{f}' found in target directory '{config.INSTALL_DIR}'"
+                    for f in conflict_files
+                ]
+                raise Exception("\n".join(err))
         for f in install_files:
             target_fpath = os.path.join(config.INSTALL_DIR, f)
             shutil.copy(f, target_fpath)
@@ -465,6 +472,7 @@ def atomic_backup():
 # 4|       -d    |        |        |     d  |  a b    c|
 #
 # unless you make modification records with timestamp per state, you cannot restore every state.
+# you must do more than just using rclone flags.
 # given its complexity, let's not do it.
 #
 
@@ -493,10 +501,38 @@ _, COMMIT_CMD = get_script_path_and_exec_cmd("commit")
 
 def commit():
     success = False
-    return_code = os.system(COMMIT_CMD)
+    add_config_success = add_safe_directory()
+    if add_config_success:
+        return_code = os.system(COMMIT_CMD)
+        assert (
+            return_code == 0
+        ), f"Failed to execute commit script with exit code {return_code}"
+        success = True
+    return success
+
+
+GIT_LIST_CONFIG = f"{GIT} config -l"
+GIT_ADD_GLOBAL_CONFIG_CMDGEN = (
+    lambda conf: f"{GIT} config --global --add {conf.replace('=',' ')}"
+)
+
+
+def add_safe_directory():
+    """
+    We do this here so you don't have to.
+    """
+    success = False
+    p = subprocess.run(GIT_LIST_CONFIG.split(), stdout=subprocess.PIPE)
+    curdir = os.path.abspath(".").replace("\\", "/")
     assert (
-        return_code == 0
-    ), f"Failed to execute commit script with exit code {return_code}"
+        p.returncode == 0
+    ), f"Abnormal return code {p.returncode} while listing git configuration"
+    target_conf = f"safe.directory={curdir}"
+    if target_conf not in p.stdout.decode("utf-8"):
+        return_code = os.system(GIT_RM_CACHED_CMDGEN(target_conf))
+        assert (
+            return_code == 0
+        ), "Abnormal return code while adding current directory to safe directories"
     success = True
     return success
 
@@ -559,7 +595,7 @@ def atomic_commit_common():
 
 
 if __name__ == "__main__":
-    with filelock.FileLock(LOCKFILE, timeout=LOCK_TIMEOUT) as lockfile:
+    with filelock.FileLock(LOCKFILE+"1", timeout=LOCK_TIMEOUT) as lockfile:
         success = atomic_commit()
         if not success:
             raise Exception("Failed to perform atomic commit.")
