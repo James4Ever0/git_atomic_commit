@@ -299,12 +299,14 @@ for p in IGNORED_PATHS:
         ret = os.system(cmd)
         assert ret in [0, 128], f"error while removing path '{p}' from git cache"
 
+# breakpoint()
 has_gitignore = False
 if missing_ignored_paths != []:
     with open(GITIGNORE_INPROGRESS, "w+") as f:
         if gitignore_content != "":
             f.write(line(gitignore_content))
-        for p in existing_ignored_paths + missing_ignored_paths:
+        for p in missing_ignored_paths:
+        # for p in existing_ignored_paths + missing_ignored_paths:
             f.write(line(p))
     if os.path.exists(GITIGNORE):
         has_gitignore = True
