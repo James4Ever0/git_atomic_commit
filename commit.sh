@@ -1,4 +1,4 @@
-git pull origin main
+git pull --atomic origin main
 git add .
 git commit -m "update"
-git push origin main
+git push --atomic origin main

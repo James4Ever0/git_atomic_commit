@@ -11,6 +11,8 @@ import filelock
 import pathlib
 
 # TODO: automatic configure git safe directory
+# TODO: use builtin atomic feature of git, or even better, just get latest backup from remote (you may still need to backup config and hooks locally)
+# ref: https://git-scm.com/search/results?search=atomic
 
 
 class BackupUpdateCheckMode(StrEnum):
@@ -192,6 +194,8 @@ REV_PARSE_HASH = f"{GIT} rev-parse HEAD"
 GITIGNORE = ".gitignore"
 GITIGNORE_INPROGRESS = ".inprogress_gitignore"
 GITIGNORE_BACKUP = f"{GITIGNORE}_backup"
+ROLLBACK_INPROGRESS_FLAG = ".rollback_inprogress"
+
 GITDIR = ".git"
 COMMIT_FLAG = ".atomic_commit_flag"
 LOCKFILE = f".atomic_commit_lock{'_nt' if os.name == 'nt' else ''}"
@@ -211,7 +215,9 @@ GIT_RM_CACHED_CMDGEN = lambda p: f"{GIT} rm -r --cached {p}"
 def git_fsck():
     exit_code = os.system(FSCK)
     success = exit_code == 0
-    logger_print(f"{GIT} fsck {'success' if success else 'failed'} at: {os.path.abspath('.')}")
+    logger_print(
+        f"{GIT} fsck {'success' if success else 'failed'} at: {os.path.abspath('.')}"
+    )
     return success
 
 
@@ -276,7 +282,9 @@ existing_ignored_paths = []
 
 if os.path.exists(GITIGNORE_BACKUP):
     if os.path.exists(GITIGNORE):
-        raise Exception(f"Both '{GITIGNORE}' and '{GITIGNORE_BACKUP}' exist. Cannot recover.")
+        raise Exception(
+            f"Both '{GITIGNORE}' and '{GITIGNORE_BACKUP}' exist. Cannot recover."
+        )
     else:
         print(f"Restoring '{GITIGNORE}' from backup")
         shutil.move(GITIGNORE_BACKUP, GITIGNORE)
@@ -305,7 +313,7 @@ if missing_ignored_paths != []:
         if gitignore_content != "":
             f.write(line(gitignore_content))
         for p in missing_ignored_paths:
-        # for p in existing_ignored_paths + missing_ignored_paths:
+            # for p in existing_ignored_paths + missing_ignored_paths:
             f.write(line(p))
     if os.path.exists(GITIGNORE):
         has_gitignore = True
@@ -313,7 +321,6 @@ if missing_ignored_paths != []:
     shutil.move(GITIGNORE_INPROGRESS, GITIGNORE)
     if has_gitignore:
         os.remove(GITIGNORE_BACKUP)
-    
 
 
 import subprocess
@@ -501,6 +508,7 @@ def rollback():
     if incomplete:
         raise Exception("Backup is incomplete. Cannot rollback.")
     else:
+        pathlib.Path(ROLLBACK_INPROGRESS_FLAG).touch()
         return_code = os.system(ROLLBACK_COMMAND)
         assert (
             return_code == 0
@@ -510,6 +518,7 @@ def rollback():
         # # selected files in main dir along with files from backup dir
         git_not_corrupted = git_fsck()
         success = git_not_corrupted
+        os.remove(ROLLBACK_INPROGRESS_FLAG)
     return success
 
 
@@ -600,9 +609,10 @@ def atomic_commit():
 def atomic_commit_common():
     git_not_corrupted = False
     can_commit = False
+    rollback_inprogress = os.path.exists(ROLLBACK_INPROGRESS_FLAG)
     git_not_corrupted = git_fsck()
 
-    if not git_not_corrupted:
+    if not git_not_corrupted or rollback_inprogress:
         if rollback():
             can_commit = True
     else:
