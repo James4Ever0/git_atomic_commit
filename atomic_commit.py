@@ -32,8 +32,29 @@ class GitHeadHashAcquisitionMode(StrEnum):
 
 from pydantic import Field
 
-# you may need to sync description with title to use `pydantic_argparse`.
+REPO_UP_TO_DATE_KW = 'Your branch is up to date with'
 
+class RepoStatus:
+    up_to_date:bool
+
+# you may need to sync description with title to use `pydantic_argparse`.
+def get_repo_status():
+    proc = subprocess.Popen(['git', 'status'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    b_out, b_err = proc.communicate()
+
+    out = b_out.decode('utf-8')
+    err = b_err.decode('utf-8')
+
+    if err != '':
+        raise Exception(f'error checking repo status.\n[stdout]\n{out}\n[stderr]\n{err}')
+    else:
+        # get the info.
+        up_to_date = REPO_UP_TO_DATE_KW in out
+        has_added_files = 
+
+        stat = RepoStatus(up_to_date=up_to_date,)
+        return stat
 
 class AtomicCommitConfig(EnvBaseModel):
     # BACKUP_MODE: BackupMode = Field(
@@ -567,6 +588,9 @@ def add_safe_directory():
 
 
 # TODO: formulate this into a state machine.
+
+# TODO: check necessarity of commitment
+# TODO: check if commit is incomplete
 def atomic_commit():
     r"""
       fsck 
@@ -577,11 +601,15 @@ def atomic_commit():
       | y     | n
     backup (atomic) & update d_back nothing
       \       /
-      commit
+      need_commit?
+        | y     \ n
+       commit    exit
           |
         fsck
     succ/  \fail
-        |    | rollback (most recent backup) & exit
+        |   - rollback (most recent backup) & exit
+    incomplete? -(y)- exit
+        | n
     update d_comm
       | backup (atomic)
       | update d_back
