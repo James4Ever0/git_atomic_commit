@@ -1,4 +1,10 @@
 
+Have you ever encountered corrupted git repositories before? This tool is for you!
+
+By default it will create backup of the `.git` folder before and after commitment if it has passed integrity checks. It also checks necessarity of commitment, whether commitment is done right, automatically repairments and more!
+
+----
+
 For those lazy ones:
 
 1. Install necessary binaries (`rclone`, `git`, `python3` (you may need Py3.8 or newer)) to your PATH
@@ -67,7 +73,6 @@ Timemachine is not working, maybe because the filesystem does not support hard l
 Rsync's incremental backup secret is '--link-dest', but let's make a hard-link free version.
 
 ---
-
 
 
 Use `--backup-dir` or `--compare-dest` (better not!) for convenience.
