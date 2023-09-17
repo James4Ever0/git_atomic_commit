@@ -30,34 +30,70 @@ class GitHeadHashAcquisitionMode(StrEnum):
     log = auto()
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
-REPO_UP_TO_DATE_KW = 'Your branch is up to date with'
-NOT_ADDED_KW = "Changes not staged for commit"
+REPO_UP_TO_DATE_KW = "Your branch is up to date with"
+REPO_BEHIND_KW = "Your branch is behind"
+REPO_AHEAD_OF_KW = "Your branch is ahead of"
+
+NOT_ADDED_KW = "Changes not staged for commit"  # we can have that keyword in many situations, like submodules. we can detect that if we do `git add .` then check status again. if the returned value is not changed, means no need to commit at all.
 NOT_COMMITED_KW = "no changes added to commit"
-INCOMPLETE_COMMITMENT = "Changes to be committed"
+INCOMPLETE_COMMITMENT_KW = "Changes to be committed"
+COMMIT_COMPLETE_KW = "nothing to commit, working tree clean"
 
-class RepoStatus:
-    up_to_date:bool
+
+class RepoStatus(BaseModel):
+    up_to_date: bool
+    has_unstaged_files: bool
+    incomplete_commit: bool
+
+    def need_to_run_commitment_script(self):
+        ret = (not self.up_to_date) or self.has_unstaged_files or self.incomplete_commit
+        return ret
+
 
 # you may need to sync description with title to use `pydantic_argparse`.
 def get_repo_status():
-    proc = subprocess.Popen(['git', 'status'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out1 = check_repo_status()
+
+    # get the info.
+    up_to_date = REPO_UP_TO_DATE_KW in out1
+    has_unstaged_files = NOT_ADDED_KW in out1
+
+    if has_unstaged_files:
+        ret = os.system(f"{GIT} add .")
+        assert ret == 0
+
+        out2 = check_repo_status()
+        if out2 == out1:
+            has_unstaged_files = False
+        incomplete_commit = INCOMPLETE_COMMITMENT_KW in out2
+    else:
+        incomplete_commit = INCOMPLETE_COMMITMENT_KW in out1
+
+    stat = RepoStatus(
+        up_to_date=up_to_date,
+        has_unstaged_files=has_unstaged_files,
+        incomplete_commit=incomplete_commit,
+    )
+    return stat
+
+
+def check_repo_status(encoding="utf-8"):
+    proc = subprocess.Popen(
+        [GIT, "status"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
 
     b_out, b_err = proc.communicate()
 
-    out = b_out.decode('utf-8')
-    err = b_err.decode('utf-8')
+    out = b_out.decode(encoding)
+    err = b_err.decode(encoding)
+    if err != "":
+        raise Exception(
+            f"error checking repo status.\n[stdout]\n{out}\n[stderr]\n{err}"
+        )
+    return out
 
-    if err != '':
-        raise Exception(f'error checking repo status.\n[stdout]\n{out}\n[stderr]\n{err}')
-    else:
-        # get the info.
-        up_to_date = REPO_UP_TO_DATE_KW in out
-        has_added_files = 
-
-        stat = RepoStatus(up_to_date=up_to_date,)
-        return stat
 
 class AtomicCommitConfig(EnvBaseModel):
     # BACKUP_MODE: BackupMode = Field(
@@ -580,7 +616,7 @@ def add_safe_directory():
     assert (
         p.returncode == 0
     ), f"Abnormal return code {p.returncode} while listing git configuration"
-    target_conf = f'safe.directory={curdir}'
+    target_conf = f"safe.directory={curdir}"
     if target_conf not in p.stdout.decode("utf-8"):
         return_code = os.system(GIT_ADD_GLOBAL_CONFIG_CMDGEN(target_conf))
         assert (
@@ -591,6 +627,7 @@ def add_safe_directory():
 
 
 # TODO: formulate this into a state machine.
+
 
 # TODO: check necessarity of commitment
 # TODO: check if commit is incomplete
@@ -610,7 +647,7 @@ def atomic_commit():
           |
         fsck
     succ/  \fail
-        |   - rollback (most recent backup) & exit
+        |   \_ rollback (most recent backup) & exit
     incomplete? -(y)- exit
         | n
     update d_comm
@@ -620,31 +657,46 @@ def atomic_commit():
   """
     success = False
     commit_success = False
+    commit_hash_changed = False
     can_commit = atomic_commit_common()
 
     if can_commit:
-        hash_before = get_git_head_hash()
-        commit_success = commit()
-        hash_after = get_git_head_hash()
-        commit_hash_changed = hash_after != hash_before
-        if commit_success:
-            if commit_hash_changed:
-                pathlib.Path(COMMIT_FLAG).touch()
+        status = get_repo_status()
+        if status.need_to_run_commitment_script():
+            hash_before = get_git_head_hash()
+            commit_success = commit()
+            hash_after = get_git_head_hash()
+            commit_hash_changed = hash_after != hash_before
+            if not commit_success:
+                return success
         else:
+            logger_print(
+                "Repo status:", status, "No need to run commit script", "Exiting"
+            )
+            success = True
             return success
 
-    finalize_commit_success = atomic_commit_common()
+    finalize_commit_success = atomic_commit_common(
+        post_commit=True,
+        commit_success=commit_success,
+        commit_hash_changed=commit_hash_changed,
+    )
     if finalize_commit_success:
         success = True
 
     return success
 
 
-def atomic_commit_common():
+def atomic_commit_common(
+    post_commit=False, commit_success=..., commit_hash_changed=...
+):
     git_not_corrupted = False
     can_commit = False
     rollback_inprogress = os.path.exists(ROLLBACK_INPROGRESS_FLAG)
     git_not_corrupted = git_fsck()
+
+    if post_commit:
+        post_commit_actions(commit_success, commit_hash_changed)
 
     if not git_not_corrupted or rollback_inprogress:
         if rollback():
@@ -653,6 +705,18 @@ def atomic_commit_common():
         if atomic_backup():
             can_commit = True
     return can_commit
+
+
+def post_commit_actions(commit_success, commit_hash_changed):
+    if commit_success:
+        if commit_hash_changed:
+            pathlib.Path(COMMIT_FLAG).touch()
+        else:
+            status = get_repo_status()
+            logger_print("Repo status:", status)
+            if status.need_to_run_commitment_script():
+                logger_print("Incomplete commitment detected.")
+            raise Exception("Commitment failed.")
 
 
 if __name__ == "__main__":
