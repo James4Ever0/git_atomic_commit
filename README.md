@@ -1,5 +1,15 @@
 
-for those lazy ones:
+For those lazy ones:
+
+1. Install necessary binaries (`rclone`, `git`, `python3` (you may need Py3.8 or newer)) to your PATH
+2. Setup necessary dependencies: `pip3 install -r requirements.txt`
+3. Write platform specific/independent commit scripts: `commit.cmd`, `commit.sh`, `commit.py`, etc...
+4. Test by running `python3 atomic_commit.py`
+5. Run this in scheduler like `crond` or Windows Task Scheduler
+
+----
+
+Command line arguments:
 
 ```
 usage: atomic_commit.py [-h] [--install_dir INSTALL_DIR]
@@ -36,28 +46,28 @@ options:
 ```
 
 
-this repo intends to create atomic backup & recovery capability of the delicate `.git` directory, before and after commit operations.
+This repo intends to create atomic backup & recovery capability of the delicate `.git` directory, before and after commit operations.
 
-backup directory shall be ignored and specified in `.gitignore` file.
+Backup directory shall be ignored and specified in `.gitignore` file.
 
-to maximize compatibility, `rclone` is preferred. to enjoy `linux-timemachine` like convenience, you need to improvise.
-
----
-
-in the future, we may make this into git hook to be fool-proof and easy-installable
+To maximize compatibility, `rclone` is preferred. to enjoy `linux-timemachine` like convenience, you need to improvise.
 
 ---
 
-timemachine is not working, maybe because the filesystem does not support hard links.
+In the future, we may make this into git hook to be fool-proof and easy-installable
+
+---
+
+Timemachine is not working, maybe because the filesystem does not support hard links.
 
 ---
 
 `--link-dest` is the secret sauce of timemachine. will `--copy-dest` work the same?
 
-rsync's incremental backup secret is '--link-dest', but let's make a hard-link free version.
+Rsync's incremental backup secret is '--link-dest', but let's make a hard-link free version.
 
 ---
 
 
 
-use `--backup-dir` or `--compare-dest` (better not!) for convenience.
+Use `--backup-dir` or `--compare-dest` (better not!) for convenience.
