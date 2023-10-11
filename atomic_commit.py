@@ -8,7 +8,8 @@ from enum import auto
 from strenum import StrEnum
 REQUIRED_BINARIES = [RCLONE := "rclone", GIT := "git"]
 
-DISABLE_GIT_AUTOCRLF = '{GIT} config --global core.autocrlf input'
+DISABLE_GIT_AUTOCRLF = f'{GIT} config --global core.autocrlf input'
+PRUNE_NOW = f'{GIT} gc --prune=now'
 os.system(DISABLE_GIT_AUTOCRLF)
 # import parse
 from config_utils import EnvBaseModel, getConfig
@@ -64,6 +65,7 @@ def detect_upstream_branch():
         raise Exception("Error: Current branch has no upstream branch set\nHint: git branch --set-upstream-to=<origin name>/<branch> <current branch>")
 
 def detect_upstream_branch_and_add_safe_directory():
+    # do not swap the order.
     success = add_safe_directory()
     detect_upstream_branch()
     return success
@@ -759,3 +761,6 @@ if __name__ == "__main__":
         success = atomic_commit()
         if not success:
             raise Exception("Failed to perform atomic commit.")
+        else:
+            logger_print("Cleaning up after successful commit:")
+            os.system(PRUNE_NOW)
