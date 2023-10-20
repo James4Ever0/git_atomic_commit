@@ -701,8 +701,9 @@ def rollback():
         os.remove(ROLLBACK_INPROGRESS_FLAG)
     return success
 
-
-_, COMMIT_CMD = get_script_path_and_exec_cmd("commit")
+COMMIT_CMD = ...
+if not config.NO_COMMIT:
+    _, COMMIT_CMD = get_script_path_and_exec_cmd("commit")
 
 
 def commit():
@@ -792,11 +793,11 @@ def atomic_commit():
     #     logger_print("failed to add safe directory")
     #     return success
 
-    can_commit = atomic_commit_common()
-
     # now we recursively install and execute this script (skipping commit) to lower `.git` directories, skipping symbolic links
     if not config.SUBMODULE:
         recursive_install_and_execute_script_to_lower_git_directories()
+
+    can_commit = atomic_commit_common()
 
     if config.NO_COMMIT:
         logger_print("skipping commit action because configuration")
