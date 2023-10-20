@@ -720,13 +720,14 @@ def commit():
 
 
 # TODO: formulate this into a state machine.
-
+from easyprocess import EasyProcess
 def execute_script_submodule(directory:str):
     success = False
     cmd = [sys.executable, SCRIPT_FILENAME]
     cmd.extend(['--no_commit', 'True', '--submodule', 'True'])
     with chdir_context(directory):
-        ret = os.system(' '.join(cmd))
+        proc = EasyProcess(cmd).call()
+        ret = proc.return_code
         success = ret == 0
         if not success:
             logger_print(f"Failed to execute script at directory '{directory}'")
