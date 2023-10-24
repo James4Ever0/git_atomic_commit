@@ -67,6 +67,14 @@ def add_safe_directory():
     return success
 
 
+def exec_system_command_and_check_return_code(command:str, banner:str):
+    success = False
+    ret = os.system(command)
+    success = ret == 0
+    assert success, f"{banner.title()} command failed with exit code {ret}"
+    return success
+
+
 def detect_upstream_branch():
     try:
         upstream = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', '@{upstream}'], stderr=subprocess.STDOUT).decode().strip()
@@ -631,13 +639,6 @@ def backup():
         with open(BACKUP_FLAG, "w+") as f:
             git_hash = get_git_head_hash()
             f.write(git_hash)
-    return success
-
-def exec_system_command_and_check_return_code(command, banner):
-    success = False
-    ret = os.system(command)
-    success = ret == 0
-    assert success, f"{banner.title()} command failed with exit code {ret}"
     return success
 
 
