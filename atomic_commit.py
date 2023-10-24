@@ -4,6 +4,7 @@ from log_utils import logger_print
 import shutil
 import subprocess
 
+# TODO: backup .gitconfig file in user directory, if config related command fails we restore it and rerun the command
 # TODO: recursively backup all .git folders in submodules
 # TODO: repair corrupted index by renaming index file and `git reset`
 
@@ -14,7 +15,10 @@ REQUIRED_BINARIES = [RCLONE := "rclone", GIT := "git"]
 DISABLE_GIT_AUTOCRLF = f'{GIT} config --global core.autocrlf input'
 PRUNE_NOW = f'{GIT} gc --prune=now'
 SCRIPT_FILENAME = os.path.basename(__file__)
-os.system(DISABLE_GIT_AUTOCRLF)
+
+# TODO: combine this with other git config commands
+# os.system(DISABLE_GIT_AUTOCRLF)
+
 # import parse
 from config_utils import EnvBaseModel, getConfig
 import filelock
@@ -29,9 +33,12 @@ class BackupUpdateCheckMode(StrEnum):
     commit_and_backup_flag_metadata = auto()
     git_commit_hash = auto()
 
+USER_HOME = os.path.expanduser("~")
 
-
-
+GIT_CONFIG_FNAME = ".gitconfig"
+GIT_CONFIG_BACKUP_FNAME = ".gitconfig.bak"
+GIT_CONFIG_ABSPATH = os.path.join(USER_HOME, GIT_CONFIG_FNAME)
+GIT_CONFIG_BACKUP_ABSPATH = os.path.join(USER_HOME, GIT_CONFIG_BACKUP_FNAME)
 GIT_LIST_CONFIG = f"{GIT} config -l"
 GIT_ADD_GLOBAL_CONFIG_CMDGEN = (
     lambda conf: f"{GIT} config --global --add {conf.split('=')[0]} \"{conf.split('=')[1]}\""
@@ -69,9 +76,21 @@ def detect_upstream_branch():
         raise Exception("Error: Current branch has no upstream branch set\nHint: git branch --set-upstream-to=<origin name>/<branch> <current branch>")
 
 def detect_upstream_branch_and_add_safe_directory():
+    success = False
     # do not swap the order.
     success = add_safe_directory()
-    detect_upstream_branch()
+    if not success:
+        # repair
+        logger_print("repairing .gitconfig")
+        repaired = restore_gitconfig()
+        if repaired:
+            success = add_safe_directory()
+    if success:
+        # backup
+        logger_print("backing up .gitconfig")
+        backedUp = backup_gitconfig()
+        if backedUp:
+            detect_upstream_branch()
     return success
 
 # class BackupMode(StrEnum):
@@ -204,6 +223,23 @@ class AtomicCommitConfig(EnvBaseModel):
 # exit()
 
 config = getConfig(AtomicCommitConfig)
+
+rclone_flags = config.RCLONE_FLAGS
+RCLONE_SYNC_CMDGEN = lambda source, target:  f"{RCLONE} sync {rclone_flags} \"{source}\" \"{target}\""
+
+BACKUP_GIT_CONFIG = RCLONE_SYNC_CMDGEN(GIT_CONFIG_ABSPATH, GIT_CONFIG_BACKUP_ABSPATH)
+RESTORE_GIT_CONFIG = RCLONE_SYNC_CMDGEN(GIT_CONFIG_BACKUP_ABSPATH, GIT_CONFIG_ABSPATH)
+
+def backup_gitconfig():
+    success = False
+    success = exec_system_command_and_check_return_code(BACKUP_GIT_CONFIG, 'backup .gitconfig')
+    return success
+
+def restore_gitconfig():
+    success = False
+    success = exec_system_command_and_check_return_code(RESTORE_GIT_CONFIG, 'restore .gitconfig')
+    return success
+
 
 def check_if_filepath_is_valid(filepath):
     assert os.path.exists(filepath), f"path '{filepath}' does not exist."
@@ -557,13 +593,15 @@ def get_script_path_and_exec_cmd(script_prefix):
 # deadlock: if both backup integrity & fsck failed, what to do?
 # when backup is done, put head hash as marker
 # default skip check: mod-time & size
-rclone_flags = config.RCLONE_FLAGS
-BACKUP_COMMAND_COMMON = f"{RCLONE} sync {rclone_flags} {GITDIR} {INPROGRESS_DIR}"
 
-ROLLBACK_COMMAND = f"{RCLONE} sync {rclone_flags} {BACKUP_GIT_DIR} {GITDIR}"
+# BACKUP_COMMAND_COMMON = f"{RCLONE} sync {rclone_flags} {GITDIR} {INPROGRESS_DIR}"
+BACKUP_COMMAND_COMMON = RCLONE_SYNC_CMDGEN(GITDIR, INPROGRESS_DIR)
+
+# ROLLBACK_COMMAND = f"{RCLONE} sync {rclone_flags} {BACKUP_GIT_DIR} {GITDIR}"
+ROLLBACK_COMMAND = RCLONE_SYNC_CMDGEN(BACKUP_GIT_DIR, GITDIR)
 
 # if config.BACKUP_MODE == BackupMode.last_time_only:
-BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
+# BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
 # else:
 #     # take care of last backup!
 #     BACKUP_COMMAND_GEN = (
@@ -574,10 +612,9 @@ BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
 def backup():
     if os.path.exists(BACKUP_GIT_DIR):
         shutil.move(BACKUP_GIT_DIR, INPROGRESS_DIR)
-    backup_command = BACKUP_COMMAND_GEN()
-    ret = os.system(backup_command)
-    success = ret == 0
-    assert success, f"Backup command failed with exit code {ret}"
+    backup_command = BACKUP_COMMAND_COMMON
+    # backup_command = BACKUP_COMMAND_GEN()
+    success = exec_system_command_and_check_return_code(backup_command, 'backup')
     # then we move folders into places.
     shutil.move(INPROGRESS_DIR, BACKUP_GIT_DIR)
     # if config.BACKUP_MODE == BackupMode.incremental:
@@ -594,6 +631,13 @@ def backup():
         with open(BACKUP_FLAG, "w+") as f:
             git_hash = get_git_head_hash()
             f.write(git_hash)
+    return success
+
+def exec_system_command_and_check_return_code(command, banner):
+    success = False
+    ret = os.system(command)
+    success = ret == 0
+    assert success, f"{banner.title()} command failed with exit code {ret}"
     return success
 
 
