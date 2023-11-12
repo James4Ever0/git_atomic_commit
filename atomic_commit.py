@@ -1,3 +1,5 @@
+# TODO: split execution logs with commandline
+
 import os
 import sys
 from log_utils import logger_print
