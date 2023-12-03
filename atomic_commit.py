@@ -197,7 +197,9 @@ class AtomicCommitConfig(EnvBaseModel):
     #     default=False, title="Skip duplication/conflict checks during installation."
     # )
     DUPLICATION_CHECK_MODE: Literal['md5sum', 'filesize'] = Field(
-        default='filesize', title="Duplication check mode during installation. Duplicated files will not be copied."
+        default='md5sum',
+        # default='filesize',
+        title="Duplication check mode during installation. Duplicated files will not be copied."
     )
     RCLONE_FLAGS: str = Field(
         default="-P", title="Commandline flags for rclone command"
