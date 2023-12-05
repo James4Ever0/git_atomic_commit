@@ -426,6 +426,40 @@ def chdir_context(dirpath: str):
     finally:
         os.chdir(cwd)
 
+def detect_upstream_branch_add_safe_directory_and_git_fsck():
+    success = False
+    detect_upstream_branch_and_add_safe_directory()
+    assert os.path.isdir(GITDIR), "Git directory not found!"
+    success = git_fsck()
+    return success
+
+# BACKUP_COMMAND_COMMON = f"{RCLONE} sync {rclone_flags} {GITDIR} {INPROGRESS_DIR}"
+BACKUP_COMMAND_COMMON = RCLONE_SYNC_CMDGEN(GITDIR, INPROGRESS_DIR)
+
+# ROLLBACK_COMMAND = f"{RCLONE} sync {rclone_flags} {BACKUP_GIT_DIR} {GITDIR}"
+ROLLBACK_COMMAND = RCLONE_SYNC_CMDGEN(BACKUP_GIT_DIR, GITDIR)
+
+
+def rollback():
+    # do we have incomplete backup? if so, we cannot rollback.
+    success = False
+    incomplete = os.path.exists(INPROGRESS_DIR)
+    if incomplete:
+        raise Exception("Backup is incomplete. Cannot rollback.")
+    else:
+        pathlib.Path(ROLLBACK_INPROGRESS_FLAG).touch()
+        return_code = os.system(ROLLBACK_COMMAND)
+        assert (
+            return_code == 0
+        ), f"Running rollback command failed with exit code {return_code}"
+        # if config.BACKUP_MODE == BackupMode.incremental:
+        # ...  # group files based on modification time, or `--min-age`
+        # # selected files in main dir along with files from backup dir
+        git_not_corrupted = git_fsck()
+        success = git_not_corrupted
+        os.remove(ROLLBACK_INPROGRESS_FLAG)
+    return success
+
 
 def install_script(install_dir:str, source_dir:str = "."):
     # if config.INSTALL_DIR is not "":
@@ -434,9 +468,15 @@ def install_script(install_dir:str, source_dir:str = "."):
     if os.path.exists(install_dir):
         with chdir_context(install_dir):
             # add_safe_directory()
-            detect_upstream_branch_and_add_safe_directory()
-            assert os.path.isdir(GITDIR), "Git directory not found!"
-            success = git_fsck()
+            success = False
+            try: # restore first.
+                success = detect_upstream_branch_add_safe_directory_and_git_fsck()
+                assert success, "First installation failed."
+            except:
+                print("Trying second installation")
+                rollback_success = rollback()
+                if rollback_success:
+                    success = detect_upstream_branch_add_safe_directory_and_git_fsck()
             if not success:
                 raise Exception("Target git repository is corrupted.")
 
@@ -606,11 +646,6 @@ def get_script_path_and_exec_cmd(script_prefix):
 # when backup is done, put head hash as marker
 # default skip check: mod-time & size
 
-# BACKUP_COMMAND_COMMON = f"{RCLONE} sync {rclone_flags} {GITDIR} {INPROGRESS_DIR}"
-BACKUP_COMMAND_COMMON = RCLONE_SYNC_CMDGEN(GITDIR, INPROGRESS_DIR)
-
-# ROLLBACK_COMMAND = f"{RCLONE} sync {rclone_flags} {BACKUP_GIT_DIR} {GITDIR}"
-ROLLBACK_COMMAND = RCLONE_SYNC_CMDGEN(BACKUP_GIT_DIR, GITDIR)
 
 # if config.BACKUP_MODE == BackupMode.last_time_only:
 # BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON
@@ -729,26 +764,6 @@ def atomic_backup():
 # given its complexity, let's not do it.
 #
 
-
-def rollback():
-    # do we have incomplete backup? if so, we cannot rollback.
-    success = False
-    incomplete = os.path.exists(INPROGRESS_DIR)
-    if incomplete:
-        raise Exception("Backup is incomplete. Cannot rollback.")
-    else:
-        pathlib.Path(ROLLBACK_INPROGRESS_FLAG).touch()
-        return_code = os.system(ROLLBACK_COMMAND)
-        assert (
-            return_code == 0
-        ), f"Running rollback command failed with exit code {return_code}"
-        # if config.BACKUP_MODE == BackupMode.incremental:
-        # ...  # group files based on modification time, or `--min-age`
-        # # selected files in main dir along with files from backup dir
-        git_not_corrupted = git_fsck()
-        success = git_not_corrupted
-        os.remove(ROLLBACK_INPROGRESS_FLAG)
-    return success
 
 COMMIT_CMD = ...
 if not config.NO_COMMIT:
@@ -921,3 +936,4 @@ if __name__ == "__main__":
         else:
             logger_print("Cleaning up after successful commit:")
             os.system(PRUNE_NOW)
+
