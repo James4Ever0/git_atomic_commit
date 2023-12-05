@@ -5,6 +5,7 @@ import sys
 from log_utils import logger_print
 import shutil
 import subprocess
+BACKUP_BASE_DIR = ".git_backup"
 
 # TODO: backup .gitconfig file in user directory, if config related command fails we restore it and rerun the command
 # TODO: recursively backup all .git folders in submodules
@@ -45,6 +46,55 @@ GIT_LIST_CONFIG = f"{GIT} config -l"
 GIT_ADD_GLOBAL_CONFIG_CMDGEN = (
     lambda conf: f"{GIT} config --global --add {conf.split('=')[0]} \"{conf.split('=')[1]}\""
 )
+
+
+from contextlib import contextmanager
+
+def test_encoding(filename:str, encoding='utf-8'):
+    success = False
+    try:
+        with open(filename, 'r', encoding=encoding) as f:
+            content = f.read()
+            success = True
+    except:
+        pass
+    return success
+
+def get_backup_path(filename):
+    backup_path = os.path.join(BACKUP_BASE_DIR, filename)
+    return backup_path
+
+def rollback_file(filename):
+    success = False
+    backup_path = get_backup_path(filename)
+    if os.path.exists(backup_path):
+        shutil.copy(backup_path, filename)
+        success = True
+    return success
+
+def backup_file(filename):
+    success = False
+    backup_path = get_backup_path(filename)
+    if os.path.exists(filename):
+        shutil.copy(filename, backup_path)
+        success = True
+    return success
+
+@contextmanager
+def encoding_check_and_backup_context(filename:str, encoding='utf-8'):
+    success = False
+    success = test_encoding(filename, encoding)
+    if not success:
+        success = rollback_file(filename)
+    if success:
+        try:
+            yield
+        finally:
+            backup_file(filename)
+    else:
+        raise Exception("Could not rollback file: %s" % filename)
+
+
 
 
 def add_safe_directory():
@@ -393,7 +443,6 @@ GITDIR = ".git"
 COMMIT_FLAG = ".atomic_commit_flag"
 LOCKFILE = f".atomic_commit_lock{'_nt' if os.name == 'nt' else ''}"
 LOCK_TIMEOUT = 5
-BACKUP_BASE_DIR = ".git_backup"
 BACKUP_GIT_DIR = os.path.join(BACKUP_BASE_DIR, GITDIR)
 BACKUP_FLAG = os.path.join(BACKUP_BASE_DIR, ".atomic_backup_flag")
 INPROGRESS_DIR = os.path.join(BACKUP_BASE_DIR, ".inprogress")
@@ -412,9 +461,6 @@ def git_fsck():
         f"{GIT} fsck {'success' if success else 'failed'} at: {os.path.abspath('.')}"
     )
     return success
-
-
-from contextlib import contextmanager
 
 
 @contextmanager
@@ -557,11 +603,17 @@ if os.path.exists(GITIGNORE_BACKUP):
 
 if os.path.exists(GITIGNORE):
     if os.path.isfile(GITIGNORE):
-        with open(GITIGNORE, "r") as f:
-            gitignore_content = f.read()
-            existing_ignored_paths = gitignore_content.split("\n")
-            existing_ignored_paths = [t.strip() for t in existing_ignored_paths]
-            existing_ignored_paths = [t for t in existing_ignored_paths if len(t) > 0]
+        try:
+            with encoding_check_and_backup_context(GITIGNORE):
+                with open(GITIGNORE, "r", encoding='utf-8') as f:
+                    gitignore_content = f.read()
+                    existing_ignored_paths = gitignore_content.split("\n")
+                    existing_ignored_paths = [t.strip() for t in existing_ignored_paths]
+                    existing_ignored_paths = [t for t in existing_ignored_paths if len(t) > 0]
+        except: # encoding issue
+            existing_ignored_paths = []
+            os.remove(GITIGNORE)
+
 
 line = lambda s: f"{s.strip()}\n"
 missing_ignored_paths = []
@@ -578,12 +630,13 @@ for p in IGNORED_PATHS:
 
 has_gitignore = False
 if missing_ignored_paths != []:
-    with open(GITIGNORE_INPROGRESS, "w+") as f:
-        if gitignore_content != "":
-            f.write(line(gitignore_content))
-        for p in missing_ignored_paths:
-            # for p in existing_ignored_paths + missing_ignored_paths:
-            f.write(line(p))
+    with encoding_check_and_backup_context(GITIGNORE_INPROGRESS):
+        with open(GITIGNORE_INPROGRESS, "w+", encoding='utf-8') as f:
+            if gitignore_content != "":
+                f.write(line(gitignore_content))
+            for p in missing_ignored_paths:
+                # for p in existing_ignored_paths + missing_ignored_paths:
+                f.write(line(p))
     if os.path.exists(GITIGNORE):
         has_gitignore = True
         shutil.move(GITIGNORE, GITIGNORE_BACKUP)
@@ -675,17 +728,19 @@ def backup():
         pathlib.Path(BACKUP_FLAG).touch()
         # use os.path.getmtime(BACKUP_FLAG) to get the latest timestamp
     else:  # write git hash to flag.
-        with open(BACKUP_FLAG, "w+") as f:
-            git_hash = get_git_head_hash()
-            f.write(git_hash)
+        with encoding_check_and_backup_context(BACKUP_FLAG):
+            with open(BACKUP_FLAG, "w+", encoding="utf-8") as f:
+                git_hash = get_git_head_hash()
+                f.write(git_hash)
     return success
 
 
 def get_last_backup_commit_hash():
     _hash = None
     if os.path.isfile(BACKUP_FLAG):
-        with open(BACKUP_FLAG, "r") as f:
-            _hash = f.read().strip()
+        with encoding_check_and_backup_context(BACKUP_FLAG):
+            with open(BACKUP_FLAG, "r", encoding="utf-8") as f:
+                _hash = f.read().strip()
     return _hash
 
 
