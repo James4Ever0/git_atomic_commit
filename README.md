@@ -76,3 +76,8 @@ Rsync's incremental backup secret is '--link-dest', but let's make a hard-link f
 
 
 Use `--backup-dir` or `--compare-dest` (better not!) for convenience.
+
+
+## Star History
+
+<img src="https://api.star-history.com/svg?repos=james4ever0/git_atomic_commit&Timeline" style="filter: invert(100%);"></img>
