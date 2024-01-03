@@ -1,5 +1,11 @@
 # TODO: split execution logs with commandline
 
+# TODO: refuse to commit if filesize or filenum exceeds limit
+# TODO: refuse to commit if status checking & commiting exceeds time limit and rollback .git folder
+# TODO: eliminate submodules by `git config submodule.ignore all`
+# TODO: timeout the commit process, perform some pre-commit test
+# TODO: use `git status -uno`, rollback actions like `git add .`
+
 import os
 import sys
 from log_utils import logger_print
@@ -26,6 +32,8 @@ SCRIPT_FILENAME = os.path.basename(__file__)
 from config_utils import EnvBaseModel, getConfig
 import filelock
 import pathlib
+
+class NoUpstreamBranchException(Exception): ...
 
 # TODO: automatic configure git safe directory
 # TODO: use builtin atomic feature of git, or even better, just get latest backup from remote (you may still need to backup config and hooks locally)
@@ -133,7 +141,7 @@ def detect_upstream_branch():
         logger_print("Upstream branch: " + upstream)
         return upstream
     except subprocess.CalledProcessError:
-        raise Exception("Error: Current branch has no upstream branch set\nHint: git branch --set-upstream-to=<origin name>/<branch> <current branch>")
+        raise NoUpstreamBranchException("Error: Current branch has no upstream branch set\nHint: git branch --set-upstream-to=<origin name>/<branch> <current branch>")
 
 def detect_upstream_branch_and_add_safe_directory():
     success = False
@@ -985,10 +993,17 @@ def post_commit_actions(commit_success, commit_hash_changed):
 
 if __name__ == "__main__":
     with filelock.FileLock(LOCKFILE, timeout=LOCK_TIMEOUT) as lockfile:
-        success = atomic_commit()
-        if not success:
-            raise Exception("Failed to perform atomic commit.")
-        else:
-            logger_print("Cleaning up after successful commit:")
-            os.system(PRUNE_NOW)
-
+        try:
+            success = atomic_commit()
+            if not success:
+                raise Exception("Failed to perform atomic commit.")
+            else:
+                logger_print("Cleaning up after successful commit:")
+                os.system(PRUNE_NOW)
+        except NoUpstreamBranchException as e:
+            logger_print(e)
+            logger_print("No upstream branch, skipping post-commit actions.")
+            logger_print("Rolling back now.")
+            success = rollback()
+            if not success:
+                raise Exception("Failed to rollback after failed to detect upstream branch.")
