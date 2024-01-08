@@ -1,0 +1,349 @@
+{
+    "100": {
+        "file_id": 4,
+        "content": "    def reduce(self):\n        \"\"\"\n        Returns self as if parsed by first parent datamodel\n        \"\"\"\n        bases = self.__class__.__bases__\n        for base in bases:\n            if issubclass(base, Union[EnvBaseModel, BaseModel]):\n                return base.parse_obj(self)\n        raise Exception(\n            \"Cannot reduce model: %s\\nBases: %s\" % (self.__class__.__name__, bases)\n        )\n    def diff(self):\n        \"\"\"\n        Returns a dictionary which contains all properties with non-default values\n        \"\"\"\n        return {k: v for k, v in self.dict().items() if v != self.__fields__[k].default}\n    def __new__(cls, *args, **kwargs):\n        upper_prop_keys = set()\n        with ExceptionManager() as exc_manager:\n            for key in getBaseModelPropertyKeys(cls):\n                upper_key = key.upper()\n                keylen = len(key)\n                if upper_key != key:\n                    exc_manager.append(\"Key %s is not upper case.\" % key)\n                elif upper_key in upper_prop_keys:",
+        "type": "code",
+        "location": "/config_utils.py:36-63"
+    },
+    "101": {
+        "file_id": 4,
+        "content": "The code defines three methods: 'reduce', 'diff', and a class-specific constructor '__new__'. The 'reduce' method checks the model's base classes and returns the first parent datamodel. The 'diff' method returns a dictionary containing properties with non-default values. The '__new__' method iterates over the base model property keys, checks if they are uppercase, and appends an exception message if not.",
+        "type": "comment"
+    },
+    "102": {
+        "file_id": 4,
+        "content": "                    exc_manager.append(\n                        \"Duplicate property %s in definition of %s\"\n                        % (upper_prop_keys, cls.__name__)\n                    )\n                elif keylen < min_envname_length_threshold:\n                    exc_manager.append(\n                        \"Key %s (length: %d) is too short.\\nMinimum length: %d\"\n                        % (key, keylen, min_envname_length_threshold)\n                    )\n                else:\n                    for uk in upper_prop_keys:\n                        edit_distance = Levenshtein.distance(uk, upper_key)\n                        min_upper_prop_key_st = suspicous_threshold * 2\n                        if edit_distance < min_upper_prop_key_st:\n                            exc_manager.append(\n                                \"Key %s has too little distance to another key %s.\\nMinimum distance: %d\"\n                                % (upper_key, uk, min_upper_prop_key_st)\n                            )\n                    upper_prop_keys.add(upper_key)",
+        "type": "code",
+        "location": "/config_utils.py:64-82"
+    },
+    "103": {
+        "file_id": 4,
+        "content": "This code checks for duplicate properties, property key length, and similarity between keys to avoid potential issues in the configuration. It appends exception messages to a list if any issues are found, otherwise adds the upper_key to upper_prop_keys set.",
+        "type": "comment"
+    },
+    "104": {
+        "file_id": 4,
+        "content": "        # new_cls = super().__new__(cls)\n        # new_cls.__annotations__ = cls.__annotations__\n        # breakpoint()\n        # return new_cls\n        return super().__new__(cls)\nfrom pydantic import Field\nclass DotEnvBaseModel(EnvBaseModel):\n    DOTENV: Union[str, None] = Field(default=None, title=\"A single DotEnv file path\")\nclass ArgumentEnv(DotEnvBaseModel):\n    @classmethod\n    def load(cls):\n        trans = ArgumentTransformer(cls)\n        param = trans.parse()\n        return param\nclass ShellEnv(DotEnvBaseModel):\n    @classmethod\n    def load(cls):\n        pks = getBaseModelPropertyKeys(cls)\n        shellenvs = os.environ\n        envs = {}\n        with ExceptionManager() as exc_manager:\n            for k, v in shellenvs.items():\n                if len(pks) == 0:\n                    break\n                uk = k.upper()\n                pks.sort(key=lambda pk: Levenshtein.distance(pk, uk))\n                fpk = pks[0]\n                if fpk == uk:\n                    envs[fpk] = v\n                    pks.remove(fpk)",
+        "type": "code",
+        "location": "/config_utils.py:83-120"
+    },
+    "105": {
+        "file_id": 4,
+        "content": "The code defines three classes: `DotEnvBaseModel`, `ArgumentEnv`, and `ShellEnv`. They inherit from `EnvBaseModel` and use the `Field` class from `pydantic` library. The code also includes a method called `load()` that is used to load the DotEnv file into an instance of either `ArgumentEnv` or `ShellEnv`. The method creates an instance of `ArgumentTransformer` and uses it to parse the DotEnv file, then returns the parameter values. If any exceptions occur during this process, they are handled by an `ExceptionManager`.",
+        "type": "comment"
+    },
+    "106": {
+        "file_id": 4,
+        "content": "                else:\n                    ed = Levenshtein.distance(fpk, uk)\n                    if ed < suspicous_threshold:\n                        exc_manager.append(\n                            f\"Suspicious shell env var found.\\n'{k}' (upper case: '{uk}') is similar to '{fpk}' (edit distance: {ed})\"\n                        )\n                    else:\n                        continue  # do nothing. just ignore excessive shell environment vars.\n        return cls(**envs)\nfrom dotenv import dotenv_values\nclass DotEnv(EnvBaseModel):\n    IMPORT: str = Field(\n        default=\"\",\n        title=\"DotEnv import file path list which shall be separated by space\",\n    )\n    @property\n    def import_fpaths(self):\n        imp_fpaths = self.IMPORT.strip().split()\n        imp_fpaths = [fp.strip() for fp in imp_fpaths]\n        imp_fpaths = [fp for fp in imp_fpaths if len(fp) > 0]\n        return imp_fpaths\n    def resolve_import_graph(self):\n        import_fpaths = self.import_fpaths\n        resolv = []\n        for fpath in import_fpaths:",
+        "type": "code",
+        "location": "/config_utils.py:121-152"
+    },
+    "107": {
+        "file_id": 4,
+        "content": "This code is a Python class definition for the \"DotEnv\" class. It uses the \"EnvBaseModel\" as its base and has a \"IMPORT\" attribute, which is a field used to specify import file paths separated by spaces. The class also includes properties and methods to resolve imported files and check for suspicious environment variables.",
+        "type": "comment"
+    },
+    "108": {
+        "file_id": 4,
+        "content": "            subdot = self.preload(fpath, envs={}, _cls=DotEnv)\n            resolv.append(fpath)\n            subresolv = subdot.resolve_import_graph()\n            resolv.extend(subresolv)\n        resolv.reverse()\n        ret = []\n        for res in resolv:\n            if res not in ret:\n                ret.append(res)\n        ret.reverse()\n        return ret\n    @classmethod\n    def preload(cls, fpath: str, _cls=None):\n        assert os.path.isfile(fpath), \"File %s does not exist\" % fpath\n        envs = {}\n        if _cls is None:\n            _cls = cls\n        vals = dotenv_values(fpath)\n        prop_keys = getBaseModelPropertyKeys(cls)\n        with ExceptionManager() as exc_manager:\n            for k, v in vals.items():\n                if len(prop_keys) == 0:\n                    break\n                uk = k.upper()\n                if uk not in prop_keys:\n                    exc_manager.append(\n                        \"No matching property '%s' in schema %s\" % (uk, prop_keys)\n                    )\n                    for pk in prop_keys:",
+        "type": "code",
+        "location": "/config_utils.py:153-186"
+    },
+    "109": {
+        "file_id": 4,
+        "content": "This code is responsible for resolving and preloading configuration files in a specific order, ensuring that environment variables from these files are properly assigned to their corresponding properties in the schema. It also handles exceptions and ensures that only matching properties are set, avoiding any potential conflicts or overwrites.",
+        "type": "comment"
+    },
+    "110": {
+        "file_id": 4,
+        "content": "                        if Levenshtein.distance(uk, pk) <= suspicous_threshold:\n                            exc_manager.append(f\"'{uk}' could be: '{pk}'\")\n                else:\n                    prop_keys.remove(uk)\n                    envs[uk] = v\n        return _cls(**envs)\n    @classmethod\n    def presolve_import_graph(cls, fpath: str):\n        pre_inst = cls.preload(fpath, _cls=DotEnv)\n        imp_graph = pre_inst.resolve_import_graph()\n        return imp_graph\n    @classmethod\n    def load(cls, fpath: str):\n        inst = cls.preload(fpath)\n        inst_envs = inst.diff()\n        envs = {}\n        for imp_fpath in inst.resolve_import_graph():\n            envs.update(cls.preload(imp_fpath).diff())\n        envs.update(inst_envs)\n        return cls(**envs)\nclass EnvManager:\n    shellEnv: ShellEnv\n    dotEnv: DotEnv\n    argumentEnv: ArgumentEnv\n    @classmethod\n    def load(cls):\n        cls.shellEnv: ShellEnv\n        cls.dotEnv: DotEnv\n        cls.argumentEnv: ArgumentEnv\n        shellEnvInst = cls.shellEnv.load()",
+        "type": "code",
+        "location": "/config_utils.py:187-222"
+    },
+    "111": {
+        "file_id": 4,
+        "content": "This code snippet defines a class called \"DotEnv\" and a method within it, which compares two strings (uk and pk) using the Levenshtein distance algorithm. If the distance is less than or equal to the suspicious threshold, it appends a message to a list. Otherwise, it removes the first string from a set of property keys and assigns a value to the remaining key in an \"env\" dictionary. The DotEnv class also has a method called \"presolve_import_graph\", which preloads a file and returns an import graph. Additionally, there is another class called EnvManager, which defines properties (shellEnv, dotEnv, argumentEnv), but only loads them without any specific actions.",
+        "type": "comment"
+    },
+    "112": {
+        "file_id": 4,
+        "content": "        params = shellEnvInst.dict()\n        argumentEnvInst = cls.argumentEnv.load()\n        params.update(argumentEnvInst.diff())\n        _dotenv = shellEnvInst.DOTENV\n        if _dotenv is not None:\n            dotEnvInst = cls.dotEnv.load(_dotenv)\n            params.update(dotEnvInst.diff())\n        return params\nclass EnvConfig:\n    \"\"\"\n    This class is used to parse and store the environment variables from file or environment variables.\n    Property names are case-insensitive.\n    \"\"\"\n    manager_cls: EnvManager\n    data_cls: EnvBaseModel\n    @classmethod\n    def load(cls):\n        \"\"\"\n        Load environment variables.\n        Load sequence:\n            Environment variables from shell\\n\n            Commandline arguments\\n\n            Dotenv file and subsequent imported files\n        \"\"\"\n        params = cls.manager_cls.load()\n        data_inst = cls.data_cls(**params)\n        logger_print(\n            \"Loaded environment variables:\",\n            *[f\"{k}:\\t{repr(v)}\" for k, v in data_inst.dict().items()],",
+        "type": "code",
+        "location": "/config_utils.py:223-258"
+    },
+    "113": {
+        "file_id": 4,
+        "content": "This code loads environment variables from different sources: shell, command line arguments, and dotenv files. It uses the EnvConfig class to parse and store the variables, with case-insensitive property names. The load method returns a dictionary of loaded environment variables in the order of priority: shell, command line arguments, and dotenv files.",
+        "type": "comment"
+    },
+    "114": {
+        "file_id": 4,
+        "content": "        )\n        return data_inst\ndef getFieldsSetByAnnotation(dataclass: EnvBaseModel):\n    anno = dataclass.__annotations__\n    fields = anno.keys()\n    return set(fields)\ndef checkReservedKeywordNameClash(\n    reserved_dataclass: EnvBaseModel, env_class: EnvBaseModel\n):\n    reserved = getFieldsSetByAnnotation(reserved_dataclass)\n    env = getFieldsSetByAnnotation(env_class)\n    isect = reserved.intersection(env)\n    if isect != set():\n        with ExceptionManager(\n            default_error=f\"Dataclass '{env_class.__name__}' has name clash on reserved dataclass '{reserved_dataclass.__name__}'\"\n        ) as em:\n            for field in isect:\n                em.append(f\"Field '{field}' clashed.\")\ndef extendEnvClass(\n    reserved_dataclass: Union[ShellEnv, ArgumentEnv, DotEnv], env_class: EnvBaseModel\n):\n    # do not change the annotations in the class definition.\n    checkReservedKeywordNameClash(reserved_dataclass, env_class)\n    class extended_env_class(reserved_dataclass, env_class):\n        ...\n    extended_env_class.__annotations__ = {",
+        "type": "code",
+        "location": "/config_utils.py:259-292"
+    },
+    "115": {
+        "file_id": 4,
+        "content": "The code defines a function called `checkReservedKeywordNameClash`, which takes two dataclasses as parameters: `reserved_dataclass` and `env_class`. It retrieves the fields set by annotations of both dataclasses using the `getFieldsSetByAnnotation` function, then checks for any intersection between the sets. If there is a clash, it raises an exception with the clashing field names. The code also includes a function called `extendEnvClass`, which extends the `env_class` by adding fields from the `reserved_dataclass`. The `__annotations__` attribute is not modified directly to maintain compatibility with older Python versions.",
+        "type": "comment"
+    },
+    "116": {
+        "file_id": 4,
+        "content": "        **reserved_dataclass.__annotations__,\n        **env_class.__annotations__,\n    }\n    # breakpoint()\n    extended_env_class.__doc__ = env_class.__doc__\n    return extended_env_class\n# def getShellEnvClass(env_class: EnvBaseModel):\n#     shell_env_class = extendEnvClass(ShellEnv, env_class)\n#     return shell_env_class\n# def getDotEnvClass(env_class: EnvBaseModel):\n#     dot_env_class = extendEnvClass(DotEnv, env_class)\n#     return dot_env_class\n# def getArgumentEnvClass(env_class: EnvBaseModel):\n#     argument_env_class = extendEnvClass(ArgumentEnv, env_class)\n#     return argument_env_class\ndef getEnvManagerClass(env_class: EnvBaseModel):\n    class env_manager_class(EnvManager):\n        shellEnv = extendEnvClass(ShellEnv, env_class)\n        dotEnv = extendEnvClass(DotEnv, env_class)\n        argumentEnv = extendEnvClass(ArgumentEnv, env_class)\n        # shellEnv = getShellEnvClass(env_class)\n        # dotEnv = getDotEnvClass(env_class)\n        # argumentEnv = getArgumentEnvClass(env_class)\n    return env_manager_class",
+        "type": "code",
+        "location": "/config_utils.py:293-325"
+    },
+    "117": {
+        "file_id": 4,
+        "content": "Creates a class extending EnvManager with three classes for shell, dotenv, and argument environments, using the given env_class.",
+        "type": "comment"
+    },
+    "118": {
+        "file_id": 4,
+        "content": "def getEnvConfigClass(env_class: EnvBaseModel):\n    class env_config_class(EnvConfig):\n        manager_cls = getEnvManagerClass(env_class)\n        data_cls = env_class\n    return env_config_class\nfrom typing import TypeVar\nT = TypeVar(\"T\")\ndef getConfig(data_cls: T) -> T:\n    envConfigClass = getEnvConfigClass(data_cls)\n    config: T = envConfigClass.load()\n    return config",
+        "type": "code",
+        "location": "/config_utils.py:328-344"
+    },
+    "119": {
+        "file_id": 4,
+        "content": "This code defines two functions, `getEnvConfigClass` and `getConfig`. The first function creates a new class that inherits from `EnvConfig` with specific manager and data classes. The second function returns the loaded configuration for the given data class using the previously created custom config class.",
+        "type": "comment"
+    },
+    "120": {
+        "file_id": 5,
+        "content": "/error_utils.py",
+        "type": "filepath"
+    },
+    "121": {
+        "file_id": 5,
+        "content": "This code defines a class `ErrorManager` for error and exception handling, offering methods to manage errors, format messages, handle exceptions with `__enter__` and `__exit__`, and includes special method implementations and an iterable implementation.",
+        "type": "summary"
+    },
+    "122": {
+        "file_id": 5,
+        "content": "from log_utils import logger_print\n# from beartype import beartype\nfrom typing import Union\nimport traceback\nimport sys\n# @beartype\nclass ErrorManager:\n    \"\"\"\n    Manage exceptions and errors.\n    Can be used in `with` statements to automate such management, which behavior can be configured by setting `suppress_error` and `suppress_exception` arguments.\n    Args:\n    suppress_error:bool: If suppressed, don't raise exception if having error messages\n    suppress_exception:bool: If suppressed, don't suppress exception raised by program\n    default_error:str: The default error message to display if any error occurs during execution\n    \"\"\"\n    def __init__(\n        self,\n        suppress_error: bool = False,\n        suppress_exception: bool = False,\n        default_error: Union[str, None] = None,\n    ):\n        self.errors = []\n        self.suppress_error = suppress_error\n        self.suppress_exception = suppress_exception\n        self.default_error = default_error\n    def __bool__(self):\n        return len(self.errors) > 0",
+        "type": "code",
+        "location": "/error_utils.py:1-35"
+    },
+    "123": {
+        "file_id": 5,
+        "content": "This code defines a class called ErrorManager which handles exceptions and errors. It can be used in with statements to automate exception management, and its behavior can be configured using suppress_error, suppress_exception, and default_error arguments.",
+        "type": "comment"
+    },
+    "124": {
+        "file_id": 5,
+        "content": "    @property\n    def has_error(self):\n        return bool(self)\n    @property\n    def has_exception(self):\n        last_exc = sys.exc_info()\n        return last_exc[0] is not None\n    def append(self, error: str):\n        self.errors.append(error)\n    def clear(self):\n        self.errors = []\n        self.default_error = None\n    def format_error(self, clear=True, join: str = \"\\n\"):\n        error_msg = join.join(\n            self.errors\n            + ([self.default_error] if (self and self.default_error) else [])\n        )\n        if clear:\n            self.clear()\n        return error_msg\n    def raise_if_any(self):\n        if self.errors:\n            self.print_if_any()\n            raise Exception(self.format_error())\n    def print_if_any(self):\n        if self.errors:\n            logger_print(self.format_error())\n            return True\n        return False\n    def __enter__(self):\n        self.raise_if_any()\n        return self\n    def __exit__(self, exc_type, exc_val, exc_tb):\n        if exc_type is None and not self.suppress_error:",
+        "type": "code",
+        "location": "/error_utils.py:37-78"
+    },
+    "125": {
+        "file_id": 5,
+        "content": "This code defines a class for handling errors and exceptions. It provides properties to check if there are any errors or exceptions, a method to append new error messages, clear the list of errors, format error messages, raise an exception if there are any errors, print errors if they exist, and implement `__enter__` and `__exit__` methods for exception handling.",
+        "type": "comment"
+    },
+    "126": {
+        "file_id": 5,
+        "content": "            self.raise_if_any()\n        else:\n            self.print_if_any()\n        if self.has_exception:\n            traceback_exc = traceback.format_exc()\n            logger_print(traceback_exc)\n        return True if self.suppress_exception else None\n    def __str__(self):\n        return self.format_error(clear=False)\n    def __repr__(self):\n        return self.format_error(clear=False)\n    def __len__(self):\n        return len(self.errors)\n    def __iter__(self):\n        return iter(self.errors)\nif __name__ == \"__main__\":\n    # test this!\n    with ErrorManager() as em:\n        # raise Exception(\"before append\")\n        em.append('abc')\n        raise Exception(\"after append\")",
+        "type": "code",
+        "location": "/error_utils.py:79-106"
+    },
+    "127": {
+        "file_id": 5,
+        "content": "This code defines a class `ErrorManager` that handles errors and exceptions. It provides methods to append errors, raise if any errors are present, print if any errors are present, and handle exception tracebacks. The code also includes special method implementations for `__str__`, `__repr__`, and `__len__` for error management. Finally, it has an iterable implementation (`__iter__`) and a test case in the `if __name__ == \"__main__\":` block.",
+        "type": "comment"
+    },
+    "128": {
+        "file_id": 6,
+        "content": "/exception_utils.py",
+        "type": "filepath"
+    },
+    "129": {
+        "file_id": 6,
+        "content": "The code introduces a custom exception handling class, ExceptionManager, for managing multiple exceptions with customizable behavior. It allows adding/removing exceptions and provides methods for printing errors, suppressing exceptions, formatting error messages, and handling iterators.",
+        "type": "summary"
+    },
+    "130": {
+        "file_id": 6,
+        "content": "from log_utils import logger_print\n# from beartype import beartype\nfrom typing import Union\n# @beartype\n# TODO: support custom exception/error handlers/formatters\nclass ExceptionManager:\n    def __init__(\n        self,\n        suppress_error: bool = False,\n        suppress_exception: bool = False,\n        default_error: Union[str, None] = None,\n    ):\n        \"\"\"\n        Manage exceptions and errors.\n        Can be used in `with` statements to automate management, which behavior can be configured by setting `suppress_error` and `suppress_exception` arguments.\n        Args:\n            suppress_error:bool: If suppressed, don't treat manual appended error messages as exception\n            suppress_exception:bool: If suppressed, don't suppress exception raised by program\n        \"\"\"\n        self.errors = []\n        self.suppress_error = suppress_error\n        self.suppress_exception = suppress_exception\n        self.default_error = default_error\n    def __bool__(self):\n        return len(self.errors) > 0\n    def has_exception(self):",
+        "type": "code",
+        "location": "/exception_utils.py:1-33"
+    },
+    "131": {
+        "file_id": 6,
+        "content": "The code defines a class called ExceptionManager to handle exceptions and errors. It can be used in `with` statements for automation, and its behavior can be customized with the suppress_error and suppress_exception arguments. The class stores any encountered errors in a list and provides methods to check if there are any errors or exceptions present.",
+        "type": "comment"
+    },
+    "132": {
+        "file_id": 6,
+        "content": "        return bool(self)\n    def append(self, error: str):\n        if not isinstance(error, str):\n            raise Exception(\"Expected error to be a string.\\nPassed: \" + error)\n        self.errors.append(error)\n    def clear(self):\n        self.errors = []\n        self.default_error = None\n    def format_error(self, clear=True, join: str = \"\\n\"):\n        msgs = self.errors + (\n            [self.default_error] if (self and (self.default_error is not None)) else []\n        )\n        error_msg = join.join(msgs)\n        if clear:\n            self.clear()\n        return error_msg\n    def raise_if_any(self):\n        if self.errors:\n            raise Exception(self.format_error())\n    def print_if_any(self):\n        if self.errors:\n            logger_print(self.format_error())\n            return True\n        return False\n    def __enter__(self):\n        self.raise_if_any()\n        return self\n    def __exit__(self, exc_type, exc_val, exc_tb):\n        if exc_type is None and not self.suppress_error:\n            self.raise_if_any()",
+        "type": "code",
+        "location": "/exception_utils.py:34-70"
+    },
+    "133": {
+        "file_id": 6,
+        "content": "This code defines a custom exception handling class that allows you to handle and manage multiple exceptions within one context. The class has methods like append, clear, format_error, raise_if_any, print_if_any, __enter__, and __exit__ which allow you to add/remove exceptions, format them for printing or raising, and handle the exceptions in a context-aware manner.",
+        "type": "comment"
+    },
+    "134": {
+        "file_id": 6,
+        "content": "        else:\n            self.print_if_any()\n        return True if self.suppress_exception else None\n    def __str__(self):\n        return self.format_error(clear=False)\n    def __repr__(self):\n        return self.format_error(clear=False)\n    def __len__(self):\n        return len(self.errors)\n    def __iter__(self):\n        return iter(self.errors)\nexceptionManager = ExceptionManager(suppress_error=True)",
+        "type": "code",
+        "location": "/exception_utils.py:71-88"
+    },
+    "135": {
+        "file_id": 6,
+        "content": "This code initializes an exception manager with suppress_error set to True, and provides methods for printing errors if any, returning the result of suppressing exceptions, formatting error messages, handling iterators, and defining string and length representation.",
+        "type": "comment"
+    },
+    "136": {
+        "file_id": 7,
+        "content": "/exceptional_print.py",
+        "type": "filepath"
+    },
+    "137": {
+        "file_id": 7,
+        "content": "This function allows for exceptional print statements that won't be replaced by logging statements.",
+        "type": "summary"
+    },
+    "138": {
+        "file_id": 7,
+        "content": "def exprint(*args, **kwargs): # provide exceptional print statements which won't be replaced by logging statements\n    print(*args, **kwargs)",
+        "type": "code",
+        "location": "/exceptional_print.py:1-2"
+    },
+    "139": {
+        "file_id": 7,
+        "content": "This function allows for exceptional print statements that won't be replaced by logging statements.",
+        "type": "comment"
+    },
+    "140": {
+        "file_id": 8,
+        "content": "/log_utils.py",
+        "type": "filepath"
+    },
+    "141": {
+        "file_id": 8,
+        "content": "The code sets up a custom logger with rotating file handlers, stream handlers, and timezone-aware datetime objects for better exception handling and improved readability. It also prints messages based on conditions and runs a test loop for debugging purposes.",
+        "type": "summary"
+    },
+    "142": {
+        "file_id": 8,
+        "content": "\"\"\"\nTo use 'managed' loggers, you must import 'logger' from this file and pass it to other code.\n\"\"\"\n# TODO: top-level exception hook (sys.excepthook)\n# TODO: configure file handlers for celery logging\n# TODO: find a tool or make some script to take input from stdin and log & filter output\nfrom rich.pretty import pretty_repr\ndef pretty(obj):\n    return pretty_repr(obj)\n# python version check\nimport sys  # recommend: 3.11.2\nimport os\ntry:\n    terminal_column_size = os.get_terminal_size().columns\nexcept:\n    terminal_column_size = 30\nMIN_PY_VERSION = (3, 8)\nSHOW_PYTHON_VERSION_WARNING = False\n# TODO; make lower version of python supports logging utils\nif sys.version_info < MIN_PY_VERSION:\n    SHOW_PYTHON_VERSION_WARNING = True\n    import inspect\n    from exceptional_print import exprint\n    FORMAT = \"%(asctime)s <%(name)s:%(levelname)s> %(callerInfo)s\\n%(message)s\"\n    SHORT_FORMAT = \"%(asctime)s <%(name)s:%(levelname)s> %(callerInfo)s\\n%(short_msg)s\"\n    def get_caller_info(level: int = 2):\n        assert level >= 2, f\"level {level} less than 2\"",
+        "type": "code",
+        "location": "/log_utils.py:1-40"
+    },
+    "143": {
+        "file_id": 8,
+        "content": "Code imports necessary libraries, sets up variables for terminal column size and minimum Python version, and checks if the current Python version is supported. If not, it raises a warning with an import statement and defines some log formatting functions.",
+        "type": "comment"
+    },
+    "144": {
+        "file_id": 8,
+        "content": "        caller_frame = inspect.currentframe().f_back\n        for _ in range(level - 1):\n            caller_frame = caller_frame.f_back\n        # breakpoint()\n        code_filename = caller_frame.f_code.co_filename\n        code_relpath = os.path.relpath(code_filename)\n        caller_info = \"['%s:%s' - %s()]\" % (\n            code_relpath,\n            caller_frame.f_lineno,\n            caller_frame.f_code.co_name,\n        )\n        # exlogger_print(caller_info.center(60, \"+\"))\n        # exlogger_print(*args, *[f\"{k}:\\t{v}\" for k, v in kwargs.items()], sep=os.linesep)\n        return caller_info\nelse:\n    FORMAT = (  # add timestamp.\n        \"%(asctime)s <%(name)s:%(levelname)s> ['%(pathname)s:%(lineno)s' - %(funcName)s()]\\n%(message)s\"  # miliseconds already included!\n        # \"%(asctime)s.%(msecs)03d <%(name)s:%(levelname)s> [%(pathname)s:%(lineno)s - %(funcName)s()]\\n%(message)s\"\n        # \"<%(name)s:%(levelname)s> [%(pathname)s:%(lineno)s - %(funcName)s()]\\n%(message)s\"\n    )\n    SHORT_FORMAT = \"%(asctime)s <%(name)s:%(levelname)s> ['%(pathname)s:%(lineno)s' - %(funcName)s()]\\n%(short_msg)s\"",
+        "type": "code",
+        "location": "/log_utils.py:41-63"
+    },
+    "145": {
+        "file_id": 8,
+        "content": "This code snippet is getting the function name, line number, and file path of the caller frame (the function that called this one) by walking up the stack until it reaches the top level. It then uses this information to format a log message using a custom logging format.",
+        "type": "comment"
+    },
+    "146": {
+        "file_id": 8,
+        "content": "# TODO: use `code_checker.py` to insert `log_utils` dependency to every py file under this folder. except for this one!\nimport logging\nimport schedule\n# import traceback\n# from exceptional_print import exprint as ep\nimport better_exceptions\n# ft = logging.Filter(\"myfilter\") # default filter is just a string checker\nallow_logging = True\nallow_huge_logging = True\nHUGE_MSG_THRESHOLD = 100\ndef refresh_logger_lock():\n    global allow_logging\n    allow_logging = True\ndef refresh_huge_logger_lock():\n    global allow_huge_logging\n    allow_huge_logging = True\nschedule.every(0.3).seconds.do(refresh_logger_lock)\nschedule.every(1).seconds.do(refresh_huge_logger_lock)\n# class MessageLengthAndFrequencyFilter:\n#     @staticmethod\ndef messageLengthAndFrequencyFilter(record: logging.LogRecord):\n    # def filter(record: logging.LogRecord):\n    global allow_logging, allow_huge_logging, HUGE_MSG_THRESHOLD\n    schedule.run_pending()\n    # logger_print(dir(record))\n    accepted = False\n    # msg = record.msg\n    # shall you intercept the args...",
+        "type": "code",
+        "location": "/log_utils.py:65-105"
+    },
+    "147": {
+        "file_id": 8,
+        "content": "This code initializes logger locks, sets global variables for logging and huge message thresholds, and schedules periodic refreshes of the logger locks. It also includes a logging filter function, but it is currently commented out.",
+        "type": "comment"
+    },
+    "148": {
+        "file_id": 8,
+        "content": "    # args = record.args # tuple. let's reset it.\n    # breakpoint()\n    msg = record.msg = record.msg % record.args\n    setattr(record, \"short_msg\", msg)\n    args = record.args = ()\n    if len(msg) < HUGE_MSG_THRESHOLD:\n        if allow_logging:  # then this is some short message.\n            accepted = True\n            allow_logging = False\n    else:\n        if allow_huge_logging:\n            record.short_msg = \" \".join(\n                [msg[:HUGE_MSG_THRESHOLD], \"...\"]\n            )  # do not put stdout in front of file handler!\n            accepted = True\n            allow_huge_logging = False\n    return accepted\nfrom logging import StreamHandler\nlog_dir = os.path.join(os.path.dirname(__file__), \"logs\")\nif os.path.exists(log_dir):\n    if not os.path.isdir(log_dir):\n        raise Exception(\n            f\"Non-directory object taking place of log directory `{log_dir}`.\"\n        )\nelse:\n    # os.system(f\"mkdir -p {log_dir}\")\n    os.mkdir(log_dir)\nlog_filename = os.path.join(log_dir, \"debug.log\")\ncelery_log_filename = os.path.join(log_dir, \"celery.log\")",
+        "type": "code",
+        "location": "/log_utils.py:106-140"
+    },
+    "149": {
+        "file_id": 8,
+        "content": "This code initializes a log file handler for a logging module and handles the formatting of log messages based on their length. It also checks if the required directory for storing logs exists and creates it if not.",
+        "type": "comment"
+    },
+    "150": {
+        "file_id": 8,
+        "content": "fastapi_log_filename = os.path.join(log_dir, \"fastapi.log\")\nfrom logging.handlers import RotatingFileHandler\nimport pytz\n# with respect to our dearly Py3.6\ntimezone_str = \"Asia/Shanghai\"\n# timezone = pytz.timezone(timezone_str:='Asia/Shanghai')\ntimezone = pytz.timezone(timezone_str)\n# import logging\nimport datetime\nclass Formatter(logging.Formatter):\n    \"\"\"override default 'logging.Formatter' to use timezone-aware datetime object\"\"\"\n    def converter(self, timestamp):\n        # Create datetime in UTC\n        dt = datetime.datetime.fromtimestamp(timestamp, tz=pytz.UTC)\n        # Change datetime's timezone\n        return dt.astimezone(timezone)\n    def formatTime(self, record, datefmt=None):\n        dt = self.converter(record.created)\n        if datefmt:\n            s = dt.strftime(datefmt)\n        else:\n            try:\n                s = dt.isoformat(timespec=\"milliseconds\")\n            except TypeError:\n                s = dt.isoformat()\n        return s\nmyFormatter = Formatter(fmt=FORMAT)\nmyShortFormatter = Formatter(fmt=SHORT_FORMAT)",
+        "type": "code",
+        "location": "/log_utils.py:141-177"
+    },
+    "151": {
+        "file_id": 8,
+        "content": "This code sets up a custom logging formatter that uses timezone-aware datetime objects. It creates a RotatingFileHandler for the \"fastapi.log\" file and configures it with two different formatters: one for a full log format and another for a shorter log format. The script also imports necessary modules like os, pytz, logging, and datetime.",
+        "type": "comment"
+    },
+    "152": {
+        "file_id": 8,
+        "content": "def makeRotatingFileHandler(log_filename: str, level=logging.DEBUG):\n    myHandler = RotatingFileHandler(\n        log_filename, maxBytes=1024 * 1024 * 15, backupCount=3, encoding=\"utf-8\"\n    )\n    myHandler.setLevel(level)\n    myHandler.setFormatter(myFormatter)\n    return myHandler\nmyHandler = makeRotatingFileHandler(log_filename)\n# myHandler.setLevel(logging.INFO) # will it log less things? yes.\n# FORMAT = \"<%(name)s:%(levelname)s> [%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s\"\n# myFormatter = logging.Formatter(fmt=FORMAT)\n# myHandler.setFormatter(myFormatter)\nstdout_handler = StreamHandler(sys.stdout)  # test with this!\nstdout_handler.setLevel(logging.DEBUG)\n# stdout_handler.addFilter(MessageLengthAndFrequencyFilter)\nstdout_handler.addFilter(messageLengthAndFrequencyFilter)  # method also works!\nstdout_handler.setFormatter(myShortFormatter)\n# do not use default logger!\n# logger = logging.getLogger(__name__)\nlogger = logging.getLogger(\"microgrid\")\nlogger.setLevel(\"DEBUG\")\nlogger.addHandler(myHandler)  # BUG: make sure long logs are unaffected in file.",
+        "type": "code",
+        "location": "/log_utils.py:180-205"
+    },
+    "153": {
+        "file_id": 8,
+        "content": "This code sets up a logging system with a rotating file handler for log files and a stream handler for stdout. It defines a makeRotatingFileHandler function that creates the RotatingFileHandler instance and configures it with maximum size and backup count. The logger is created using the specified name, set to DEBUG level, and has both the file and stdout handlers added.",
+        "type": "comment"
+    },
+    "154": {
+        "file_id": 8,
+        "content": "logger.addHandler(stdout_handler)\ndef logger_print(*args, logger=logger, stacklevel = 2):\n    if len(args) != 0:\n        format_string = \"\\n\\n\".join([\"%s\"] * len(args))\n        # python 3.8+ required!\n        logger.debug(\n            format_string,\n            *[\n                # fallback for older versions:\n                pretty(arg)\n                if not any(isinstance(arg, t) for t in [bytes, str])\n                else arg\n                # pretty_repr(arg) if not isinstance(arg, Union[bytes, str]) else arg\n                for arg in args\n            ],\n            **(\n                {\"stacklevel\": stacklevel}\n                if not SHOW_PYTHON_VERSION_WARNING\n                else {\"extra\": {\"callerInfo\": get_caller_info(level = stacklevel)}}\n            ),\n        )  # it is been called elsewhere.\n        # logger.debug(\n        #     \"\\n\\n\".join([pretty_repr(arg) if not isinstance(arg, Union[bytes, str]) else arg for arg in args]), stacklevel=2\n        # )  # it is been called elsewhere.\nimport datetime",
+        "type": "code",
+        "location": "/log_utils.py:206-234"
+    },
+    "155": {
+        "file_id": 8,
+        "content": "Logger setup and function to print formatted log messages with optional stack trace information.",
+        "type": "comment"
+    },
+    "156": {
+        "file_id": 8,
+        "content": "logger_print(\n    f\"[START LOGGING AT: {datetime.datetime.now().isoformat()}]\".center(\n        terminal_column_size, \"+\"\n    )\n    # f\"[START LOGGING AT: {datetime.datetime.now().isoformat()}]\".center(70 - 2, \"+\")\n)\n# logging.basicConfig(\n#     # filename=filename,\n#     # level=logging.getLogger().getEffectiveLevel(),\n#     level=\"DEBUG\",\n#     # stream=sys.stderr\n#     force=True, # overridding root logger, which is deprecated.\n#     handlers=[stdout_handler],\n# )\ndef logger_excepthook(exc_type, exc_value, tb):\n    with pretty_format_excinfo_context(exc_type, exc_value, tb) as formatted:\n        formatted_exc = [\"<TOPLEVEL EXCEPTION>\", formatted]\n        logger_print(*formatted_exc)\n    better_exceptions.excepthook(exc_type, exc_value, tb)\nfrom contextlib import contextmanager\n@contextmanager\ndef pretty_format_excinfo_context(exc_type, exc_value, tb):\n    try:\n        better_exceptions.SUPPORTS_COLOR = False\n        formatted = \"\".join(better_exceptions.format_exception(exc_type, exc_value, tb))\n        yield formatted",
+        "type": "code",
+        "location": "/log_utils.py:236-266"
+    },
+    "157": {
+        "file_id": 8,
+        "content": "Setting up custom exception handling and logging configuration for better readability.",
+        "type": "comment"
+    },
+    "158": {
+        "file_id": 8,
+        "content": "    finally:\n        better_exceptions.SUPPORTS_COLOR = True\ndef logger_traceback_print():\n    with pretty_format_excinfo_context(*sys.exc_info()) as formatted:\n        logger_print(formatted, stacklevel = 3)\nsys.excepthook = logger_excepthook\nlogger_print(\"logging started at directory: \", os.path.abspath(os.curdir))\nif SHOW_PYTHON_VERSION_WARNING:\n    logger_print(\n        f\"Please use Python {'.'.join([str(v) for v in MIN_PY_VERSION])} and above.\"\n    )\nif __name__ == \"__main__\":  # just a test.\n    import time\n    for i in range(100):\n        time.sleep(0.1)\n        logger.debug(f\"test debug message {i}\")\n        logger.debug(f\"test debug message {i} %s\", \"myarg\")\n        logger.debug(f\"test huge message {i} \" * 100)  # huge mssage",
+        "type": "code",
+        "location": "/log_utils.py:267-288"
+    },
+    "159": {
+        "file_id": 8,
+        "content": "This code sets up a logger for printing tracebacks, changes sys.excepthook to use this logger, and prints messages for various conditions. It also runs a test loop that logs debug messages.\n\nCode functionality: \nThe code sets the 'better_exceptions.SUPPORTS_COLOR' variable to True. It defines the 'logger_traceback_print' function which uses the context manager 'pretty_format_excinfo_context' to format an exception traceback and logs it with 'logger_print'. The 'sys.excepthook' is set to 'logger_excepthook' so that exceptions are logged using this logger. Finally, it prints a message indicating the start of logging at the current directory and a warning if the Python version is below a certain minimum level. If run as main script, it runs a loop which logs debug messages.",
+        "type": "comment"
+    },
+    "160": {
+        "file_id": 9,
+        "content": "/requirements.txt",
+        "type": "filepath"
+    },
+    "161": {
+        "file_id": 9,
+        "content": "This code is a requirements.txt file, listing the necessary Python packages for the project.",
+        "type": "summary"
+    },
+    "162": {
+        "file_id": 9,
+        "content": "pydantic\nrich\nschedule\nbetter-exceptions\npython-dotenv\nlevenshtein\nfilelock\npytz\nsimple-file-checksum",
+        "type": "code",
+        "location": "/requirements.txt:1-9"
+    },
+    "163": {
+        "file_id": 9,
+        "content": "This code is a requirements.txt file, listing the necessary Python packages for the project.",
+        "type": "comment"
+    }
+}

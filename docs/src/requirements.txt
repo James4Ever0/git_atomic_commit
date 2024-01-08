@@ -1,0 +1,9 @@
+pydantic
+rich
+schedule
+better-exceptions
+python-dotenv
+levenshtein
+filelock
+pytz
+simple-file-checksum

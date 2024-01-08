@@ -1,0 +1,10 @@
+{
+    "summary": "Updates the git repository by pulling changes from origin, adding all files, committing with \"update\" message, and pushing to origin.",
+    "details": [
+        {
+            "comment": "Updates the git repository by pulling changes from origin, adding all files, committing with \"update\" message, and pushing to origin.",
+            "location": "\"/media/root/Toshiba XG3/works/git_atomic_commit/docs/src/commit.cmd\":0-4",
+            "content": "@REM git config --global --add safe.directory E:/works/git_atomic_commit\ngit pull origin main\ngit add .\ngit commit -m \"update\"\ngit push origin main"
+        }
+    ]
+}

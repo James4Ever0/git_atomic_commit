@@ -1,0 +1,547 @@
+{
+    "0": {
+        "file_id": 0,
+        "content": "/README.md",
+        "type": "filepath"
+    },
+    "1": {
+        "file_id": 0,
+        "content": "The tool helps recover and prevent corrupted Git repositories by creating backups, checking commit necessity, and repairing issues. It uses command-line options for managing version control and backups using Git and Rclone, with features like setting installation directory and skipping conflict checks. The repo aims to create atomic backup and recovery capabilities for the `.git` directory.",
+        "type": "summary"
+    },
+    "2": {
+        "file_id": 0,
+        "content": "Have you ever encountered corrupted git repositories before? This tool is for you!\nBy default it will create backup of the `.git` folder before and after commitment if it has passed integrity checks. It also checks necessarity of commitment, whether commitment is done right, automatically repairments and more!\n----\nFor those lazy ones:\n1. Install necessary binaries (`rclone`, `git`, `python3` (you may need Py3.8 or newer)) to your PATH\n2. Setup necessary dependencies: `pip3 install -r requirements.txt`\n3. Write platform specific/independent commit scripts: `commit.cmd`, `commit.sh`, `commit.py`, etc...\n4. Test by running `python3 atomic_commit.py`\n5. Run this in scheduler like `crond` or Windows Task Scheduler\n----\nCommand line arguments:\n```\nusage: atomic_commit.py [-h] [--install_dir INSTALL_DIR]\n                        [--skip_conflict_check SKIP_CONFLICT_CHECK]\n                        [--rclone_flags RCLONE_FLAGS]\n                        [--backup_update_check_mode BACKUP_UPDATE_CHECK_MODE]\n                        [--git_head_hash_acquisition_mode GIT_HEAD_HASH_ACQUISITION_MODE]",
+        "type": "code",
+        "location": "/README.md:2-25"
+    },
+    "3": {
+        "file_id": 0,
+        "content": "The README explains that this tool helps recover from and prevent corrupted git repositories by creating backups, checking commitment necessity, and automatically repairing issues. Install necessary binaries, set up dependencies, create platform-specific commit scripts, and run the script in a scheduler.",
+        "type": "comment"
+    },
+    "4": {
+        "file_id": 0,
+        "content": "                        [--dotenv DOTENV]\noptions:\n  -h, --help            show this help message and exit\n  --install_dir INSTALL_DIR\n                        [  type ]       <class 'str'>\n                        [default]\n                        Directory for installation (if set, after installation the program will exit)\n  --skip_conflict_check SKIP_CONFLICT_CHECK\n                        [  type ]       <class 'bool'>\n                        [default]       False\n                        Skip duplication/conflict checks during installation.\n  --rclone_flags RCLONE_FLAGS\n                        [  type ]       <class 'str'>\n                        [default]       -P\n                        Commandline flags for rclone command\n  --backup_update_check_mode BACKUP_UPDATE_CHECK_MODE\n                        [  type ]       <enum 'BackupUpdateCheckMode'>       \n                        [default]       commit_and_backup_flag_metadata      \n                        Determines necessarity of backup\n  --git_head_hash_acquisition_mode GIT_HEAD_HASH_ACQUISITION_MODE",
+        "type": "code",
+        "location": "/README.md:26-46"
+    },
+    "5": {
+        "file_id": 0,
+        "content": "This code provides command-line options for a program that likely manages version control and backups using Git and Rclone. Options include setting the installation directory, skipping conflict checks, specifying Rclone flags, and choosing backup update modes.",
+        "type": "comment"
+    },
+    "6": {
+        "file_id": 0,
+        "content": "                        [  type ]       <enum 'GitHeadHashAcquisitionMode'>  \n                        [default]       rev_parse\n                        How to acquire git HEAD (latest commit) hash\n  --dotenv DOTENV       [  type ]       typing.Optional[str]\n                        A single DotEnv file path\n```\nThis repo intends to create atomic backup & recovery capability of the delicate `.git` directory, before and after commit operations.\nBackup directory shall be ignored and specified in `.gitignore` file.\nTo maximize compatibility, `rclone` is preferred. to enjoy `linux-timemachine` like convenience, you need to improvise.\n---\nIn the future, we may make this into git hook to be fool-proof and easy-installable\n---\nTimemachine is not working, maybe because the filesystem does not support hard links.\n---\n`--link-dest` is the secret sauce of timemachine. will `--copy-dest` work the same?\nRsync's incremental backup secret is '--link-dest', but let's make a hard-link free version.\n---\nUse `--backup-dir` or `--compare-dest` (better not!) for convenience.",
+        "type": "code",
+        "location": "/README.md:47-78"
+    },
+    "7": {
+        "file_id": 0,
+        "content": "This code is defining command-line options for a Python script. It allows the user to specify how they want to acquire git HEAD hash and provides an optional DotEnv file path. The repo aims to create atomic backup and recovery capabilities for the `.git` directory, using tools like rclone for convenience.",
+        "type": "comment"
+    },
+    "8": {
+        "file_id": 1,
+        "content": "/argparse_utils.py",
+        "type": "filepath"
+    },
+    "9": {
+        "file_id": 1,
+        "content": "The \"ArgumentTransformer\" class converts data model annotations to command line arguments, stores properties for further processing, and handles errors. The `ExternalFunctionManager` class parses command line args for running external commands but requires a missing/incomplete preceding line of code.",
+        "type": "summary"
+    },
+    "10": {
+        "file_id": 1,
+        "content": "from log_utils import logger_print\nfrom log_utils import pretty\n# from pydantic import BaseModel\nimport argparse\nfrom typing import TypeVar, Generic, Callable, Any\n# from beartype import beartype\nfrom error_utils import ErrorManager\nimport subprocess\npydantic_type_to_pytype = {\n    \"integer\": int,\n    \"number\": float,\n    \"string\": str,\n    \"boolean\": bool,\n    # fallback type: string\n}\nprop_translation_as_is = [\"default\"]\nprop_translation_table = {\n    \"enum\": \"choices\",\n    \"title\": \"help\",\n    **{e: e for e in prop_translation_as_is},\n}\nT = TypeVar(\"T\")\nimport typing\n# @beartype\n# class ExternalFunctionManager:\nclass ArgumentTransformer(Generic[T]):\n    def __init__(self, dataModel: T):\n        self.dataModel = dataModel\n        self.description = dataModel.__doc__\n        self.annotations = getattr(\n            typing, \"get_type_hints\", lambda m: m.__annotations__\n        )(self.dataModel)\n        self.schema = self.dataModel.schema()\n        self.properties = self.schema[\"properties\"]\n        self.fields = self.properties.keys()",
+        "type": "code",
+        "location": "/argparse_utils.py:1-43"
+    },
+    "11": {
+        "file_id": 1,
+        "content": "Creates a class \"ArgumentTransformer\" for transforming data model annotations to command line argument schema.\nUses \"argparse\" library and stores properties of data model in instance variables for further processing.",
+        "type": "comment"
+    },
+    "12": {
+        "file_id": 1,
+        "content": "        self.cli_arguments = {}\n        self.required = self.schema.get(\"required\", [])\n        with ErrorManager(\n            default_error=f\"error on processing schema:\\n{pretty(self.schema)}\\ndataModel: {repr(self.dataModel)}\"\n        ) as ex:\n            for field, prop in self.properties.items():\n                help_info = []\n                field_lower = field.lower()\n                args = {\"required\": field in self.required}\n                pydantic_type = prop.pop(\"type\", \"unknown\")\n                pytype = pydantic_type_to_pytype.get(pydantic_type, None)\n                annotated_type = self.annotations.get(field)\n                # annotated_type = self.dataModel.__annotations__.get(field)  # .__name__?\n                # BUG: type: None\n                if annotated_type is None:\n                    logger_print(\n                        f\"Possible malformed annotation in field '{field}' of dataclass '{self.dataModel.__name__}'\",\n                        f\"Schema: {self.schema}\",\n                    )",
+        "type": "code",
+        "location": "/argparse_utils.py:44-63"
+    },
+    "13": {
+        "file_id": 1,
+        "content": "Setting up argument processing and handling possible errors.",
+        "type": "comment"
+    },
+    "14": {
+        "file_id": 1,
+        "content": "                help_info.append(\n                    f\"[{'type'.center(7,' ')}]\\t{repr(annotated_type)}\"\n                    # f\"[type]\\t{getattr(annotated_type, '__name__', repr(annotated_type))}\"\n                )\n                for prop_name, prop_value in prop.items():\n                    if prop_name == \"default\":\n                        help_info.append(f\"[{'default'.center(7,' ')}]\\t{prop_value}\")\n                    translated_prop_name = prop_translation_table.get(prop_name, None)\n                    if translated_prop_name:\n                        args[translated_prop_name] = prop_value\n                    else:\n                        msg = f\"property key '{prop_name}' of field '{field}' does not have translation. skipping...\"\n                        logger_print(msg)\n                        # ex.append(msg)\n                if pytype is not None:\n                    args[\"type\"] = pytype\n                else:\n                    msg = f\"pydantic type '{pydantic_type}' does not have corresponding python type. falling back to str\"",
+        "type": "code",
+        "location": "/argparse_utils.py:64-82"
+    },
+    "15": {
+        "file_id": 1,
+        "content": "Appends formatted type and default value help information to list if provided. If a property key doesn't have translation, it logs a message and skips the property. If pydantic type is not present, it falls back to string type.",
+        "type": "comment"
+    },
+    "16": {
+        "file_id": 1,
+        "content": "                    logger_print(msg)\n                    # ex.append(msg)\n                    args[\"type\"] = str\n                if field_lower in self.cli_arguments.keys():\n                    ex.append(\n                        f\"Field '{field}' is possibly duplicated in the sense of lower case '{field_lower}' within existing fields\"\n                    )\n                    continue\n                # if len(help_info) > 0:\n                #     help_info += [\"\"]\n                # ref: https://www.knowledge-repo.com/post/python/adding_newlines_to_argparse_help_text_in_python.kp\n                args[\"help\"] = \"\\n\".join([*help_info, f'{args.get(\"help\",\"\")}\\n'])\n                # args[\"help\"] = '\\n'.join([f'({\", \".join(help_info)})',f'{args.get(\"help\",\"\")}'])\n                self.cli_arguments[field_lower] = args\n            # breakpoint()\n    def parse(self):\n        argparser = argparse.ArgumentParser(description=self.description)\n        argparser.formatter_class = argparse.RawTextHelpFormatter\n        for argName, cli_arg in self.cli_arguments.items():",
+        "type": "code",
+        "location": "/argparse_utils.py:83-104"
+    },
+    "17": {
+        "file_id": 1,
+        "content": "This code adds a new field to the argparse parser, handles duplication warnings, and formats help text with line breaks.",
+        "type": "comment"
+    },
+    "18": {
+        "file_id": 1,
+        "content": "            argparser.add_argument(f\"--{argName}\", **cli_arg)\n        arguments = argparser.parse_args()\n        arguments_serialized = {}\n        for field in self.fields:\n            arguments_serialized[field] = getattr(arguments, field.lower())\n        param = self.dataModel(**arguments_serialized)\n        return param\nclass ExternalFunctionManager(ArgumentTransformer[T]):\n    def __init__(self, dataModel: T, cmd: str):\n        super().__init__(dataModel)\n        self.cmd = cmd.strip()\n    def answer(self, func: Callable[[T], Any]):\n        def decorated_func():\n            param = self.parse()\n            return func(param)\n        return decorated_func\n    def call(self, func: Callable[[T], Any]):\n        def decorated_func(param: T):\n            assert isinstance(\n                param, self.dataModel\n            ), f\"Invalid parameter: {param}\\nShould be of type {self.dataModel}\"\n            arguments = []\n            for argName, argVal in param.dict().items():\n                argNameLower = argName.lower()",
+        "type": "code",
+        "location": "/argparse_utils.py:105-133"
+    },
+    "19": {
+        "file_id": 1,
+        "content": "This code defines a class `ExternalFunctionManager` and an inner class `ArgumentTransformer`, which is used to parse command line arguments, serialize them into a dictionary, and create an instance of the provided data model. It also provides two decorators: `answer()` and `call()`. The `answer()` decorator takes a function that accepts an instance of the data model and returns a new function that parses the arguments and calls the original function with the parsed arguments. The `call()` decorator wraps a function and ensures that the argument passed to it is an instance of the specified data model before executing the function.",
+        "type": "comment"
+    },
+    "20": {
+        "file_id": 1,
+        "content": "                pytype = self.cli_arguments[argName][\"type\"]\n                argVal = pytype(argVal)\n                if not isinstance(argVal, str):\n                    argVal = str(argVal)\n                arguments.extend([f\"--{argNameLower}\", argVal])\n            proc_cmd = self.cmd.split() + arguments\n            logger_print(\"calling:\", proc_cmd, \" \".join(proc_cmd))\n            proc = subprocess.run(\n                proc_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE\n            )\n            logger_print(\"process output:\", proc.stdout.decode())\n            logger_print(\"process stderr:\", proc.stderr.decode())\n            if proc.returncode != 0:\n                logger_print(\"invalid process return code:\", proc.returncode)\n            return func(param)\n        return decorated_func\n# from shared_datamodels import ConflictRefinerParams\n# conflictRefinerManager = ExternalFunctionManager(\n#     dataModel=ConflictRefinerParams,\n#     cmd=\"conda run -n docplex --live-stream --no-capture-output python conflict_utils.py\",",
+        "type": "code",
+        "location": "/argparse_utils.py:134-157"
+    },
+    "21": {
+        "file_id": 1,
+        "content": "The code is creating a command using argument names and values, then running a subprocess with that command. It logs the command, process output, and any errors if the return code is not 0. This function decorates other functions to run external commands.",
+        "type": "comment"
+    },
+    "22": {
+        "file_id": 1,
+        "content": "# )",
+        "type": "code",
+        "location": "/argparse_utils.py:158-158"
+    },
+    "23": {
+        "file_id": 1,
+        "content": "This code seems to be missing or incomplete. It appears there should be a line of code preceding this one, but it is not present in the snippet provided.",
+        "type": "comment"
+    },
+    "24": {
+        "file_id": 2,
+        "content": "/atomic_commit.py",
+        "type": "filepath"
+    },
+    "25": {
+        "file_id": 2,
+        "content": "This code ensures atomic commits in Git repositories, handles exceptions and backups, detects upstream branches, manages context, performs backup operations, verifies configurations, and ignores specific paths.",
+        "type": "summary"
+    },
+    "26": {
+        "file_id": 2,
+        "content": "# TODO: split execution logs with commandline\n# TODO: refuse to commit if filesize or filenum exceeds limit\n# TODO: refuse to commit if status checking & commiting exceeds time limit and rollback .git folder\n# TODO: eliminate submodules by `git config submodule.ignore all`\n# TODO: timeout the commit process, perform some pre-commit test\n# TODO: use `git status -uno`, rollback actions like `git add .`\nimport os\nimport sys\nfrom log_utils import logger_print\nimport shutil\nimport subprocess\nBACKUP_BASE_DIR = \".git_backup\"\n# TODO: backup .gitconfig file in user directory, if config related command fails we restore it and rerun the command\n# TODO: recursively backup all .git folders in submodules\n# TODO: repair corrupted index by renaming index file and `git reset`\nfrom enum import auto\nfrom strenum import StrEnum\nREQUIRED_BINARIES = [RCLONE := \"rclone\", GIT := \"git\"]\nDISABLE_GIT_AUTOCRLF = f'{GIT} config --global core.autocrlf input'\nPRUNE_NOW = f'{GIT} gc --prune=now'\nSCRIPT_FILENAME = os.path.basename(__file__)",
+        "type": "code",
+        "location": "/atomic_commit.py:1-26"
+    },
+    "27": {
+        "file_id": 2,
+        "content": "This code is a Python script that aims to improve the atomicity of commits in Git. It lists various improvements and enhancements that can be made to the commit process, such as splitting execution logs, refusing to commit if certain limits are exceeded, backing up .git folders, repairing corrupted indexes, and more. The code also imports necessary modules and defines constants for required binaries and script filename.",
+        "type": "comment"
+    },
+    "28": {
+        "file_id": 2,
+        "content": "# TODO: combine this with other git config commands\n# os.system(DISABLE_GIT_AUTOCRLF)\n# import parse\nfrom config_utils import EnvBaseModel, getConfig\nimport filelock\nimport pathlib\nclass NoUpstreamBranchException(Exception): ...\n# TODO: automatic configure git safe directory\n# TODO: use builtin atomic feature of git, or even better, just get latest backup from remote (you may still need to backup config and hooks locally)\n# ref: https://git-scm.com/search/results?search=atomic\nclass BackupUpdateCheckMode(StrEnum):\n    commit_and_backup_flag_metadata = auto()\n    git_commit_hash = auto()\nUSER_HOME = os.path.expanduser(\"~\")\nGIT_CONFIG_FNAME = \".gitconfig\"\nGIT_CONFIG_BACKUP_FNAME = \".gitconfig.bak\"\nGIT_CONFIG_ABSPATH = os.path.join(USER_HOME, GIT_CONFIG_FNAME)\nGIT_CONFIG_BACKUP_ABSPATH = os.path.join(USER_HOME, GIT_CONFIG_BACKUP_FNAME)\nGIT_LIST_CONFIG = f\"{GIT} config -l\"\nGIT_ADD_GLOBAL_CONFIG_CMDGEN = (\n    lambda conf: f\"{GIT} config --global --add {conf.split('=')[0]} \\\"{conf.split('=')[1]}\\\"\"\n)\nfrom contextlib import contextmanager",
+        "type": "code",
+        "location": "/atomic_commit.py:28-59"
+    },
+    "29": {
+        "file_id": 2,
+        "content": "This code is a Python script that aims to provide atomic commit functionality for Git configuration changes. It includes functions to handle backup updates, exceptions for no upstream branch, and various Git command executions. The script also utilizes context management with the `contextlib` module.",
+        "type": "comment"
+    },
+    "30": {
+        "file_id": 2,
+        "content": "def test_encoding(filename:str, encoding='utf-8'):\n    success = False\n    try:\n        with open(filename, 'r', encoding=encoding) as f:\n            content = f.read()\n            success = True\n    except:\n        pass\n    return success\ndef get_backup_path(filename):\n    backup_path = os.path.join(BACKUP_BASE_DIR, filename)\n    return backup_path\ndef rollback_file(filename):\n    success = False\n    backup_path = get_backup_path(filename)\n    if os.path.exists(backup_path):\n        shutil.copy(backup_path, filename)\n        success = True\n    return success\ndef backup_file(filename):\n    success = False\n    backup_path = get_backup_path(filename)\n    if os.path.exists(filename):\n        shutil.copy(filename, backup_path)\n        success = True\n    return success\n@contextmanager\ndef encoding_check_and_backup_context(filename:str, encoding='utf-8'):\n    success = False\n    success = test_encoding(filename, encoding)\n    if not success:\n        success = rollback_file(filename)\n    if success:\n        try:\n            yield",
+        "type": "code",
+        "location": "/atomic_commit.py:61-99"
+    },
+    "31": {
+        "file_id": 2,
+        "content": "This code defines functions for testing file encoding, backing up a file, rolling back a file if necessary, and creating a context manager to handle these operations.",
+        "type": "comment"
+    },
+    "32": {
+        "file_id": 2,
+        "content": "        finally:\n            backup_file(filename)\n    else:\n        raise Exception(\"Could not rollback file: %s\" % filename)\ndef add_safe_directory():\n    \"\"\"\n    We do this here so you don't have to.\n    \"\"\"\n    success = False\n    p = subprocess.run(GIT_LIST_CONFIG.split(), stdout=subprocess.PIPE)\n    curdir = os.path.abspath(\".\").replace(\"\\\\\", \"/\")\n    assert (\n        p.returncode == 0\n    ), f\"Abnormal return code {p.returncode} while listing git configuration\"\n    target_conf = f\"safe.directory={curdir}\"\n    if target_conf not in p.stdout.decode(\"utf-8\"):\n        cmd = GIT_ADD_GLOBAL_CONFIG_CMDGEN(target_conf)\n        logger_print(\"Running command:\", cmd)\n        return_code = os.system(cmd)\n        assert (\n            return_code == 0\n        ), f\"Abnormal return code {return_code} while adding current directory to safe directories\"\n    success = True\n    return success\ndef exec_system_command_and_check_return_code(command:str, banner:str):\n    success = False\n    ret = os.system(command)\n    success = ret == 0",
+        "type": "code",
+        "location": "/atomic_commit.py:100-133"
+    },
+    "33": {
+        "file_id": 2,
+        "content": "This code includes functions to handle Git operations such as atomic commits and adding the current directory to safe directories. It also handles running system commands with appropriate error checking and logging.",
+        "type": "comment"
+    },
+    "34": {
+        "file_id": 2,
+        "content": "    assert success, f\"{banner.title()} command failed with exit code {ret}\"\n    return success\ndef detect_upstream_branch():\n    try:\n        upstream = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', '@{upstream}'], stderr=subprocess.STDOUT).decode().strip()\n        logger_print(\"Upstream branch: \" + upstream)\n        return upstream\n    except subprocess.CalledProcessError:\n        raise NoUpstreamBranchException(\"Error: Current branch has no upstream branch set\\nHint: git branch --set-upstream-to=<origin name>/<branch> <current branch>\")\ndef detect_upstream_branch_and_add_safe_directory():\n    success = False\n    # do not swap the order.\n    success = add_safe_directory()\n    if not success:\n        # repair\n        logger_print(\"repairing .gitconfig\")\n        repaired = restore_gitconfig()\n        if repaired:\n            success = add_safe_directory()\n    if success:\n        # backup\n        logger_print(\"backing up .gitconfig\")\n        backedUp = backup_gitconfig()\n        if backedUp:\n            detect_upstream_branch()",
+        "type": "code",
+        "location": "/atomic_commit.py:134-161"
+    },
+    "35": {
+        "file_id": 2,
+        "content": "The code attempts to detect the upstream branch, add a safe directory, repair .gitconfig if necessary, and backup .gitconfig. If successful, it calls `detect_upstream_branch()`.",
+        "type": "comment"
+    },
+    "36": {
+        "file_id": 2,
+        "content": "    return success\n# class BackupMode(StrEnum):\n#     incremental = auto()\n#     last_time_only = auto()\nclass GitHeadHashAcquisitionMode(StrEnum):\n    rev_parse = auto()\n    log = auto()\nfrom pydantic import Field, BaseModel\n# shall you detect if current branch has no upstream branch, and emit exception if so, to prevent 'up-to-date' info being slienced.\n# courtesy of ChatGPT\nREPO_UP_TO_DATE_KW = \"Your branch is up to date with\"\nREPO_BEHIND_KW = \"Your branch is behind\"\nREPO_AHEAD_OF_KW = \"Your branch is ahead of\"\nNOT_ADDED_KW = \"Changes not staged for commit\"  # we can have that keyword in many situations, like submodules. we can detect that if we do `git add .` then check status again. if the returned value is not changed, means no need to commit at all.\nNOT_COMMITED_KW = \"no changes added to commit\"\nINCOMPLETE_COMMITMENT_KW = \"Changes to be committed\"\nCOMMIT_COMPLETE_KW = \"nothing to commit, working tree clean\"\nclass RepoStatus(BaseModel):\n    up_to_date: bool\n    has_unstaged_files: bool\n    incomplete_commit: bool",
+        "type": "code",
+        "location": "/atomic_commit.py:162-193"
+    },
+    "37": {
+        "file_id": 2,
+        "content": "This code defines a class `RepoStatus` with properties `up_to_date`, `has_unstaged_files`, and `incomplete_commit`. It also includes constants for different keywords related to Git status.",
+        "type": "comment"
+    },
+    "38": {
+        "file_id": 2,
+        "content": "    def need_to_run_commitment_script(self):\n        ret = (not self.up_to_date) or self.has_unstaged_files or self.incomplete_commit\n        return ret\n# you may need to sync description with title to use `pydantic_argparse`.\ndef get_repo_status():\n    out1 = check_repo_status()\n    # get the info.\n    up_to_date = REPO_UP_TO_DATE_KW in out1\n    has_unstaged_files = NOT_ADDED_KW in out1\n    if has_unstaged_files:\n        ret = os.system(f\"{GIT} add .\")\n        assert ret == 0\n        out2 = check_repo_status()\n        if out2 == out1:\n            has_unstaged_files = False\n        incomplete_commit = INCOMPLETE_COMMITMENT_KW in out2\n    else:\n        incomplete_commit = INCOMPLETE_COMMITMENT_KW in out1\n    stat = RepoStatus(\n        up_to_date=up_to_date,\n        has_unstaged_files=has_unstaged_files,\n        incomplete_commit=incomplete_commit,\n    )\n    return stat\ndef check_repo_status(encoding=\"utf-8\"):\n    proc = subprocess.Popen(\n        [GIT, \"status\"], stdout=subprocess.PIPE, stderr=subprocess.PIPE\n    )",
+        "type": "code",
+        "location": "/atomic_commit.py:195-230"
+    },
+    "39": {
+        "file_id": 2,
+        "content": "Code is checking the current status of a Git repository. It determines if the repo is up-to-date, if there are unstaged files, and if there's an incomplete commit. If there are unstaged files, it adds them to the repository and checks the new status to ensure they were added successfully. The function returns a RepoStatus object with the relevant information.",
+        "type": "comment"
+    },
+    "40": {
+        "file_id": 2,
+        "content": "    b_out, b_err = proc.communicate()\n    out = b_out.decode(encoding)\n    err = b_err.decode(encoding)\n    if err != \"\":\n        raise Exception(\n            f\"error checking repo status.\\n[stdout]\\n{out}\\n[stderr]\\n{err}\"\n        )\n    return out\nfrom typing import Literal\nclass AtomicCommitConfig(EnvBaseModel):\n    # BACKUP_MODE: BackupMode = Field(\n    #     default=BackupMode.last_time_only,\n    #     title=\"Backup mode configuration\"\n    #     # default=BackupMode.last_time_only, description=\"Backup mode configuration\"\n    # )\n    INSTALL_DIR: str = Field(\n        default=\"\",\n        title=\"Directory for installation (if set, after installation the program will exit)\",\n    )\n    # SKIP_CONFLICT_CHECK: bool = Field(\n    #     default=False, title=\"Skip duplication/conflict checks during installation.\"\n    # )\n    DUPLICATION_CHECK_MODE: Literal['md5sum', 'filesize'] = Field(\n        default='md5sum',\n        # default='filesize',\n        title=\"Duplication check mode during installation. Duplicated files will not be copied.\"",
+        "type": "code",
+        "location": "/atomic_commit.py:232-260"
+    },
+    "41": {
+        "file_id": 2,
+        "content": "Code is defining a class `AtomicCommitConfig` that includes fields for backup mode, installation directory, and duplication check mode. If the error message from checking repo status is not empty, it raises an exception with standard output (stdout) and standard error (stderr) content.",
+        "type": "comment"
+    },
+    "42": {
+        "file_id": 2,
+        "content": "    )\n    RCLONE_FLAGS: str = Field(\n        default=\"-P\", title=\"Commandline flags for rclone command\"\n    )\n    BACKUP_UPDATE_CHECK_MODE: BackupUpdateCheckMode = Field(\n        default=BackupUpdateCheckMode.commit_and_backup_flag_metadata,\n        title=\"Determines necessarity of backup\",\n    )\n    GIT_HEAD_HASH_ACQUISITION_MODE: GitHeadHashAcquisitionMode = Field(\n        default=GitHeadHashAcquisitionMode.rev_parse,\n        title=\"How to acquire git HEAD (latest commit) hash\",\n    )\n    NO_COMMIT: bool = Field(default = False, title = 'Skipping commit action')\n    SUBMODULE: bool = Field(default = False, title = 'Skipping recursive installation & excecution due to submodule.')\n# from pydantic_argparse import ArgumentParser\n# # import humps\n# parser = ArgumentParser(\n#         model=AtomicCommitConfig,\n#         # prog=\"Example Program\",\n#         # description=\"Example Description\",\n#         # description = \" \".join(humps.kebabize(AtomicCommitConfig.__name__).split(\"-\")),\n#         version=\"0.0.1\",\n#         # epilog=\"Example Epilog\",",
+        "type": "code",
+        "location": "/atomic_commit.py:261-287"
+    },
+    "43": {
+        "file_id": 2,
+        "content": "This code defines several variables for the AtomicCommitConfig model. These variables control various aspects of the program's behavior, such as command-line flags for rclone commands, whether to skip commit action or not, and how to acquire git HEAD hash. It also sets up an ArgumentParser object to parse arguments using Pydantic's argparse integration.",
+        "type": "comment"
+    },
+    "44": {
+        "file_id": 2,
+        "content": "#     )\n# args = parser.parse_typed_args()\n# Print Args\n# logger_print(args)\n# exit()\nconfig = getConfig(AtomicCommitConfig)\nrclone_flags = config.RCLONE_FLAGS\nRCLONE_SYNC_CMDGEN = lambda source, target:  f\"{RCLONE} sync {rclone_flags} \\\"{source}\\\" \\\"{target}\\\"\"\nBACKUP_GIT_CONFIG = RCLONE_SYNC_CMDGEN(GIT_CONFIG_ABSPATH, GIT_CONFIG_BACKUP_ABSPATH)\nRESTORE_GIT_CONFIG = RCLONE_SYNC_CMDGEN(GIT_CONFIG_BACKUP_ABSPATH, GIT_CONFIG_ABSPATH)\ndef backup_gitconfig():\n    success = False\n    success = exec_system_command_and_check_return_code(BACKUP_GIT_CONFIG, 'backup .gitconfig')\n    return success\ndef restore_gitconfig():\n    success = False\n    success = exec_system_command_and_check_return_code(RESTORE_GIT_CONFIG, 'restore .gitconfig')\n    return success\ndef check_if_filepath_is_valid(filepath):\n    assert os.path.exists(filepath), f\"path '{filepath}' does not exist.\"\n    assert os.path.isfile(filepath), f\"path '{filepath}' is not file.\"\ndef checksum(filepath):\n    check_if_filepath_is_valid(filepath)\n    ret = str(_checksum(filepath))",
+        "type": "code",
+        "location": "/atomic_commit.py:288-320"
+    },
+    "45": {
+        "file_id": 2,
+        "content": "The code defines functions to backup and restore a .gitconfig file using the Rclone tool. It also includes a checksum function for validating file existence and integrity.",
+        "type": "comment"
+    },
+    "46": {
+        "file_id": 2,
+        "content": "    return ret\nif config.DUPLICATION_CHECK_MODE == 'filesize':\n    def _checksum(filepath):\n        ret = os.path.getsize(filepath)\n        return ret\nelif config.DUPLICATION_CHECK_MODE == 'md5sum':\n    from simple_file_checksum import get_checksum\n    def _checksum(filepath):\n        ret = get_checksum(filepath, algorithm='MD5')\n        return ret\nelse:\n    raise Exception(f\"Unknown DUPLICATION_CHECK_MODE: {config.DUPLICATION_CHECK_MODE}\")\n# instead of 'where', we have `shutil.which`\n# def _access_check(fn, mode):\n#     return os.path.exists(fn) and os.access(fn, mode) and not os.path.isdir(fn)\n# from typing import Iterator\n# def where(cmd, mode=os.F_OK | os.X_OK, path=None) -> Iterator[str]:\n#     \"\"\"Given a command, mode, and a PATH string, generate all paths which\n#     conforms to the given mode on the PATH.\n#     `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result\n#     of os.environ.get(\"PATH\"), or can be overridden with a custom search\n#     path.\n#     \"\"\"\n#     # If we're given a path with a directory part, look it up directly rather",
+        "type": "code",
+        "location": "/atomic_commit.py:321-353"
+    },
+    "47": {
+        "file_id": 2,
+        "content": "This code defines a function `_checksum` to calculate the file size or MD5 checksum of a given filepath based on the `config.DUPLICATION_CHECK_MODE`. If the `DUPLICATION_CHECK_MODE` is neither 'filesize' nor 'md5sum', an exception is raised. Additionally, it uses the `shutil.which` function and defines a `where` generator to find executables on the PATH.",
+        "type": "comment"
+    },
+    "48": {
+        "file_id": 2,
+        "content": "#     # than referring to PATH directories. This includes checking relative to the\n#     # current directory, e.g. ./script\n#     if os.path.dirname(cmd):\n#         if _access_check(cmd, mode):\n#             return cmd\n#         return None\n#     use_bytes = isinstance(cmd, bytes)\n#     if path is None:\n#         path = os.environ.get(\"PATH\", None)\n#         if path is None:\n#             try:\n#                 path = os.confstr(\"CS_PATH\")\n#             except (AttributeError, ValueError):\n#                 # os.confstr() or CS_PATH is not available\n#                 path = os.defpath\n#         # bpo-35755: Don't use os.defpath if the PATH environment variable is\n#         # set to an empty string\n#     # PATH='' doesn't match, whereas PATH=':' looks in the current directory\n#     if not path:\n#         return None\n#     if use_bytes:\n#         path = os.fsencode(path)\n#         path = path.split(os.fsencode(os.pathsep))\n#     else:\n#         path = os.fsdecode(path)\n#         path = path.split(os.pathsep)\n#     if sys.platform == \"win32\":",
+        "type": "code",
+        "location": "/atomic_commit.py:354-385"
+    },
+    "49": {
+        "file_id": 2,
+        "content": "Checking if the command is a file by referring to PATH directories, and returning the command if it is found; otherwise, return None. If the PATH environment variable is not set, use default paths. Split the PATH string into separate entries based on platform-specific conventions.",
+        "type": "comment"
+    },
+    "50": {
+        "file_id": 2,
+        "content": "#         # The current directory takes precedence on Windows.\n#         curdir = os.curdir\n#         if use_bytes:\n#             curdir = os.fsencode(curdir)\n#         if curdir not in path:\n#             path.insert(0, curdir)\n#         # PATHEXT is necessary to check on Windows.\n#         pathext_source = os.getenv(\"PATHEXT\") or _WIN_DEFAULT_PATHEXT\n#         pathext = [ext for ext in pathext_source.split(os.pathsep) if ext]\n#         if use_bytes:\n#             pathext = [os.fsencode(ext) for ext in pathext]\n#         # See if the given file matches any of the expected path extensions.\n#         # This will allow us to short circuit when given \"python.exe\".\n#         # If it does match, only test that one, otherwise we have to try\n#         # others.\n#         if any(cmd.lower().endswith(ext.lower()) for ext in pathext):\n#             files = [cmd]\n#         else:\n#             files = [cmd + ext for ext in pathext]\n#     else:\n#         # On other platforms you don't have things like PATHEXT to tell you",
+        "type": "code",
+        "location": "/atomic_commit.py:386-408"
+    },
+    "51": {
+        "file_id": 2,
+        "content": "Windows-specific code handling file extensions for executing commands.",
+        "type": "comment"
+    },
+    "52": {
+        "file_id": 2,
+        "content": "#         # what file suffixes are executable, so just pass on cmd as-is.\n#         files = [cmd]\n#     seen = set()\n#     for dir in path:\n#         normdir = os.path.normcase(dir)\n#         if not normdir in seen:\n#             seen.add(normdir)\n#             for thefile in files:\n#                 name = os.path.join(dir, thefile)\n#                 if _access_check(name, mode):\n#                     yield name\n# for path in where('git'): # multiple git now.\n#   logger_print(path)\n# use rclone instead?\n# REQUIRED_BINARIES = [\"bash\", \"timemachine\", \"rsync\", \"git\"]\n# if on windows, we check if bash is not coming from wsl.\n# WSL_BASH = ...\nfor reqbin in REQUIRED_BINARIES:\n    assert (\n        shutil.which(reqbin) is not None\n    ), f\"Required binary '{reqbin}' is not in PATH.\"\n# import pytz\n# import datetime\n# TIMEZONE = ...\nFSCK = f\"{GIT} fsck\"\nLOG_HASH = f'{GIT} log -1 --format=format:\"%H\"'\nREV_PARSE_HASH = f\"{GIT} rev-parse HEAD\"\nGITIGNORE = \".gitignore\"\nGITIGNORE_INPROGRESS = \".inprogress_gitignore\"\nGITIGNORE_BACKUP = f\"{GITIGNORE}_backup\"",
+        "type": "code",
+        "location": "/atomic_commit.py:409-447"
+    },
+    "53": {
+        "file_id": 2,
+        "content": "This code is checking for the availability of required binary files in PATH. If any of them are missing, it raises an exception with a message indicating which binary is missing. It uses shutil.which() to check the presence of each binary file in REQUIRED_BINARIES list. If the binary is not found, it asserts that the binary is not in PATH and provides a descriptive error message.",
+        "type": "comment"
+    },
+    "54": {
+        "file_id": 2,
+        "content": "ROLLBACK_INPROGRESS_FLAG = \".rollback_inprogress\"\nGITDIR = \".git\"\nCOMMIT_FLAG = \".atomic_commit_flag\"\nLOCKFILE = f\".atomic_commit_lock{'_nt' if os.name == 'nt' else ''}\"\nLOCK_TIMEOUT = 5\nBACKUP_GIT_DIR = os.path.join(BACKUP_BASE_DIR, GITDIR)\nBACKUP_FLAG = os.path.join(BACKUP_BASE_DIR, \".atomic_backup_flag\")\nINPROGRESS_DIR = os.path.join(BACKUP_BASE_DIR, \".inprogress\")\n# INPROGRESS_INCREMENTAL_DIR = os.path.join(BACKUP_BASE_DIR, \".inprogress_incremental\")\n# INCREMENTAL_BACKUP_DIR_FORMAT = ...\n# INCREMENTAL_BACKUP_DIR_GENERATOR = lambda: ...\nLOG_DIR = \"logs\"\nIGNORED_PATHS = [LOG_DIR, BACKUP_BASE_DIR, COMMIT_FLAG, LOCKFILE, GITIGNORE_INPROGRESS]\nGIT_RM_CACHED_CMDGEN = lambda p: f\"{GIT} rm -r --cached {p}\"\ndef git_fsck():\n    exit_code = os.system(FSCK)\n    success = exit_code == 0\n    logger_print(\n        f\"{GIT} fsck {'success' if success else 'failed'} at: {os.path.abspath('.')}\"\n    )\n    return success\n@contextmanager\ndef chdir_context(dirpath: str):\n    cwd = os.getcwd()\n    os.chdir(dirpath)\n    try:\n        yield",
+        "type": "code",
+        "location": "/atomic_commit.py:448-479"
+    },
+    "55": {
+        "file_id": 2,
+        "content": "This code defines various paths and directories, and provides a few functions to perform atomic commits using Git. It checks the filesystem for errors (`git_fsck()`), and allows temporarily changing the working directory within a `contextmanager`.",
+        "type": "comment"
+    },
+    "56": {
+        "file_id": 2,
+        "content": "    finally:\n        os.chdir(cwd)\ndef detect_upstream_branch_add_safe_directory_and_git_fsck():\n    success = False\n    detect_upstream_branch_and_add_safe_directory()\n    assert os.path.isdir(GITDIR), \"Git directory not found!\"\n    success = git_fsck()\n    return success\n# BACKUP_COMMAND_COMMON = f\"{RCLONE} sync {rclone_flags} {GITDIR} {INPROGRESS_DIR}\"\nBACKUP_COMMAND_COMMON = RCLONE_SYNC_CMDGEN(GITDIR, INPROGRESS_DIR)\n# ROLLBACK_COMMAND = f\"{RCLONE} sync {rclone_flags} {BACKUP_GIT_DIR} {GITDIR}\"\nROLLBACK_COMMAND = RCLONE_SYNC_CMDGEN(BACKUP_GIT_DIR, GITDIR)\ndef rollback():\n    # do we have incomplete backup? if so, we cannot rollback.\n    success = False\n    incomplete = os.path.exists(INPROGRESS_DIR)\n    if incomplete:\n        raise Exception(\"Backup is incomplete. Cannot rollback.\")\n    else:\n        pathlib.Path(ROLLBACK_INPROGRESS_FLAG).touch()\n        return_code = os.system(ROLLBACK_COMMAND)\n        assert (\n            return_code == 0\n        ), f\"Running rollback command failed with exit code {return_code}\"",
+        "type": "code",
+        "location": "/atomic_commit.py:480-508"
+    },
+    "57": {
+        "file_id": 2,
+        "content": "This code checks if a backup is incomplete and raises an exception if it's not ready for rollback. If the backup is complete, it proceeds to create an in-progress flag and execute a rollback command.",
+        "type": "comment"
+    },
+    "58": {
+        "file_id": 2,
+        "content": "        # if config.BACKUP_MODE == BackupMode.incremental:\n        # ...  # group files based on modification time, or `--min-age`\n        # # selected files in main dir along with files from backup dir\n        git_not_corrupted = git_fsck()\n        success = git_not_corrupted\n        os.remove(ROLLBACK_INPROGRESS_FLAG)\n    return success\ndef install_script(install_dir:str, source_dir:str = \".\"):\n    # if config.INSTALL_DIR is not \"\":\n    assert install_dir != source_dir, f\"install_dir '{install_dir}' shall not be the same as source_dir '{source_dir}'\"\n    success = False\n    if os.path.exists(install_dir):\n        with chdir_context(install_dir):\n            # add_safe_directory()\n            success = False\n            try: # restore first.\n                success = detect_upstream_branch_add_safe_directory_and_git_fsck()\n                assert success, \"First installation failed.\"\n            except:\n                print(\"Trying second installation\")\n                rollback_success = rollback()\n                if rollback_success:",
+        "type": "code",
+        "location": "/atomic_commit.py:509-532"
+    },
+    "59": {
+        "file_id": 2,
+        "content": "The code checks if the `config.BACKUP_MODE` is set to incremental and groups files based on modification time or `--min-age`. It removes a flag file if no corruption was detected by `git fsck`, indicating success. The `install_script()` function asserts that the install directory is not the same as the source directory, and attempts to install the contents of the source directory into the install directory. If the install directory already exists, it first tries a \"restore\" operation before attempting the installation again if there's an issue.",
+        "type": "comment"
+    },
+    "60": {
+        "file_id": 2,
+        "content": "                    success = detect_upstream_branch_add_safe_directory_and_git_fsck()\n            if not success:\n                raise Exception(\"Target git repository is corrupted.\")\n        localfiles = os.listdir(source_dir)\n        install_files = ['atomic_commit.py', 'config_utils.py', 'exception_utils.py', 'log_utils.py', 'argparse_utils.py', 'exceptional_print.py', 'error_utils.py']\n        for f in install_files:\n            assert f in localfiles, \"Could not find '%s' in '%s'\" % (f, source_dir)\n        # install_files = [f for f in localfiles if f.endswith(\".py\")] # let's redefine this.\n        # print(install_files)\n        # breakpoint()\n        # if not config.SKIP_CONFLICT_CHECK:\n        target_dir_files = os.listdir(install_dir)\n        need_install_files = []\n        for f in install_files:\n            if f not in target_dir_files:\n                logger_print(\"target directory %s does not exist\" % f)\n                need_install_files.append(f)\n            else:\n                target_checksum = checksum(os.path.join(install_dir, f))",
+        "type": "code",
+        "location": "/atomic_commit.py:533-552"
+    },
+    "61": {
+        "file_id": 2,
+        "content": "The code checks if all required Python files exist in the source directory and compares them with the target directory. If any file is missing, it adds it to the list of \"need_install_files\". It also calculates the checksum of each file in the source directory to ensure they are not corrupted before installation in the target directory.",
+        "type": "comment"
+    },
+    "62": {
+        "file_id": 2,
+        "content": "                install_checksum = checksum(os.path.join(source_dir, f))\n                if target_checksum == install_checksum:\n                    logger_print(f\"skipping installation of file '{f}' due to same checksum '{install_checksum}' (method: {config.DUPLICATION_CHECK_MODE})\")\n                else:\n                    logger_print(f\"file '{f}' checksum mismatch. (target: '{target_checksum}', install: '{install_checksum}')\")\n                    need_install_files.append(f)\n        # conflict_files = [f for f in install_files if f in target_dir_files]\n        # if set(conflict_files) == set(install_files):\n        #     raise Exception(\n        #         \"You probably have installed at directory %s\" % config.INSTALL_DIR\n        #     )\n        # if conflict_files != []:\n        #     err = [\n        #         f\"Conflict file '{f}' found in target directory '{config.INSTALL_DIR}'\"\n        #         for f in conflict_files\n        #     ]\n        #     raise Exception(\"\\n\".join(err))\n        for f in need_install_files:",
+        "type": "code",
+        "location": "/atomic_commit.py:553-571"
+    },
+    "63": {
+        "file_id": 2,
+        "content": "This code checks the checksum of each file in the source directory and compares it with the corresponding file in the target directory. If the checksums match, the file is skipped during installation. If they don't match, the file is added to a list for installation. The code also includes some error handling for potential conflicts where all or some of the files in the source directory exist in the target directory.",
+        "type": "comment"
+    },
+    "64": {
+        "file_id": 2,
+        "content": "            logger_print(f\"installing '{f}' to '{install_dir}'\")\n            target_fpath = os.path.join(install_dir, f)\n            source_fpath = os.path.join(source_dir,f)\n            shutil.copy(source_fpath, target_fpath)\n        logger_print(f\"Atomic commit script installed at: '{install_dir}'\")\n        success = True\n    else:\n        raise Exception(\n            f\"Could not find installation directory at '{install_dir}'\"\n        )\n    return success\nif config.INSTALL_DIR != \"\":\n    success = install_script(config.INSTALL_DIR)\n    if success:\n        exit(0)\n    else:\n        raise Exception(f\"Installation failed at '{config.INSTALL_DIR}' for unknown reason.\")\nassert os.path.isdir(GITDIR), \"Git directory not found!\"\nif os.path.exists(BACKUP_BASE_DIR):\n    if not os.path.isdir(BACKUP_BASE_DIR):\n        raise Exception(\n            f\"Backup base directory path '{BACKUP_BASE_DIR}' is not a directory.\"\n        )\nelse:\n    os.mkdir(BACKUP_BASE_DIR)\ngitignore_content = \"\"\nexisting_ignored_paths = []\nif os.path.exists(GITIGNORE_BACKUP):",
+        "type": "code",
+        "location": "/atomic_commit.py:572-603"
+    },
+    "65": {
+        "file_id": 2,
+        "content": "Code is installing an atomic commit script and performing Git-related operations. It checks if the installation directory exists, copies the script if it does, and raises an exception if not found. If the INSTALL_DIR is not empty, it tries to install the script and exits with success or raises an exception if it fails. It asserts that the Git directory exists and creates a backup base directory if it doesn't exist. The code also reads the content of .gitignore file and existing ignored paths from GITIGNORE_BACKUP if it exists, otherwise initializes them as empty strings.",
+        "type": "comment"
+    },
+    "66": {
+        "file_id": 2,
+        "content": "    if os.path.exists(GITIGNORE):\n        raise Exception(\n            f\"Both '{GITIGNORE}' and '{GITIGNORE_BACKUP}' exist. Cannot recover.\"\n        )\n    else:\n        print(f\"Restoring '{GITIGNORE}' from backup\")\n        shutil.move(GITIGNORE_BACKUP, GITIGNORE)\nif os.path.exists(GITIGNORE):\n    if os.path.isfile(GITIGNORE):\n        try:\n            with encoding_check_and_backup_context(GITIGNORE):\n                with open(GITIGNORE, \"r\", encoding='utf-8') as f:\n                    gitignore_content = f.read()\n                    existing_ignored_paths = gitignore_content.split(\"\\n\")\n                    existing_ignored_paths = [t.strip() for t in existing_ignored_paths]\n                    existing_ignored_paths = [t for t in existing_ignored_paths if len(t) > 0]\n        except: # encoding issue\n            existing_ignored_paths = []\n            os.remove(GITIGNORE)\nline = lambda s: f\"{s.strip()}\\n\"\nmissing_ignored_paths = []\nfor p in IGNORED_PATHS:\n    if p not in existing_ignored_paths:\n        missing_ignored_paths.append(p)",
+        "type": "code",
+        "location": "/atomic_commit.py:604-631"
+    },
+    "67": {
+        "file_id": 2,
+        "content": "The code checks if a file named \"GITIGNORE\" exists. If it does, it compares it with \"GITIGNORE_BACKUP\". If both files exist, it raises an exception since they cannot be recovered. If the \"GITIGNORE\" file does not exist, it restores the backup file to its original name. The code then checks if the restored file is a valid text file and reads its content. It removes any empty or invalid lines and compares it with a list of paths that should be ignored. If there are missing ignored paths, it adds them to a separate list.",
+        "type": "comment"
+    },
+    "68": {
+        "file_id": 2,
+        "content": "        cmd = GIT_RM_CACHED_CMDGEN(p)\n        ret = os.system(cmd)\n        if ret not in [0, 128]:\n            logger_print(\n                f\"warning: abnormal exit code {ret} while removing path '{p}' from git cache\"\n            )\nhas_gitignore = False\nif missing_ignored_paths != []:\n    with encoding_check_and_backup_context(GITIGNORE_INPROGRESS):\n        with open(GITIGNORE_INPROGRESS, \"w+\", encoding='utf-8') as f:\n            if gitignore_content != \"\":\n                f.write(line(gitignore_content))\n            for p in missing_ignored_paths:\n                # for p in existing_ignored_paths + missing_ignored_paths:\n                f.write(line(p))\n    if os.path.exists(GITIGNORE):\n        has_gitignore = True\n        shutil.move(GITIGNORE, GITIGNORE_BACKUP)\n    shutil.move(GITIGNORE_INPROGRESS, GITIGNORE)\n    if has_gitignore:\n        os.remove(GITIGNORE_BACKUP)\ndef get_git_head_hash():\n    if config.GIT_HEAD_HASH_ACQUISITION_MODE == GitHeadHashAcquisitionMode.log:\n        cmd = LOG_HASH\n    else:\n        cmd = REV_PARSE_HASH",
+        "type": "code",
+        "location": "/atomic_commit.py:632-662"
+    },
+    "69": {
+        "file_id": 2,
+        "content": "Checking if a file/path is in the git cache and removing it.\nCreates a temporary Gitignore file with missing paths, replaces existing Gitignore file.\nGets the current git head hash using two different methods based on configuration.",
+        "type": "comment"
+    },
+    "70": {
+        "file_id": 2,
+        "content": "    proc = subprocess.run(cmd.split(), stdout=subprocess.PIPE)\n    assert (\n        code := proc.returncode\n    ) == 0, f\"Checking lastest commit hash failed with exit code {code}.\"\n    _hash = proc.stdout.strip().decode(\"utf8\")\n    return _hash\n# you may find usable bash shell next to our git executable on windows, and it is preferred\n# because wsl bash sucks\ndef get_script_path_and_exec_cmd(script_prefix):\n    \"\"\"\n    Get the script path and the command to execute the script.\n    Args:\n        script_prefix (str): The prefix of the script name.\n    Returns:\n        tuple: A tuple containing the script path (str) and the command to execute the script (str).\n    \"\"\"\n    script_path = f\"{script_prefix}.py\"\n    exec_prefix = sys.executable\n    if not os.path.exists(script_path):\n        if os.name == \"nt\":\n            script_suffix = \"cmd\"\n            exec_prefix = \"cmd /C\"\n        else:\n            script_suffix = \"sh\"\n            exec_prefix = \"bash\"\n        script_path = f\"{script_prefix}.{script_suffix}\"\n        assert os.path.exists(",
+        "type": "code",
+        "location": "/atomic_commit.py:664-696"
+    },
+    "71": {
+        "file_id": 2,
+        "content": "The code aims to get the latest commit hash by executing a command using subprocess.run. It first checks if the exit code of the command is 0, indicating success. Then it retrieves the output from the command and decodes it into UTF-8 format. The function also provides a way to find the script path and the command to execute it based on the system's operating system (Windows or non-Windows) by using the sys.executable variable.",
+        "type": "comment"
+    },
+    "72": {
+        "file_id": 2,
+        "content": "            script_path\n        ), f\"failed to find os native implementation of commit script: {script_path}\"\n    else:\n        logger_print(f\"using os independent implementation of commit: '{script_path}'\")\n    cmd = f\"{exec_prefix} {script_path}\"\n    return script_path, cmd\n# deadlock: if both backup integrity & fsck failed, what to do?\n# when backup is done, put head hash as marker\n# default skip check: mod-time & size\n# if config.BACKUP_MODE == BackupMode.last_time_only:\n# BACKUP_COMMAND_GEN = lambda: BACKUP_COMMAND_COMMON\n# else:\n#     # take care of last backup!\n#     BACKUP_COMMAND_GEN = (\n#         lambda: f\"{BACKUP_COMMAND_COMMON} '--backup-dir={INPROGRESS_INCREMENTAL_BACKUP_DIR}'\"\n#     )\ndef backup():\n    if os.path.exists(BACKUP_GIT_DIR):\n        shutil.move(BACKUP_GIT_DIR, INPROGRESS_DIR)\n    backup_command = BACKUP_COMMAND_COMMON\n    # backup_command = BACKUP_COMMAND_GEN()\n    success = exec_system_command_and_check_return_code(backup_command, 'backup')\n    # then we move folders into places.\n    shutil.move(INPROGRESS_DIR, BACKUP_GIT_DIR)",
+        "type": "code",
+        "location": "/atomic_commit.py:697-727"
+    },
+    "73": {
+        "file_id": 2,
+        "content": "This code snippet is responsible for managing git backup operations. It checks the existence of backup directories, generates backup commands based on config settings, and executes system commands to perform backups. The backup function moves the backup directory if it already exists and then either uses a common backup command or a configurable backup command generator to create the backup command. Finally, it executes the command using exec_system_command_and_check_return_code and moves the in-progress backup folder into the final backup directory.",
+        "type": "comment"
+    },
+    "74": {
+        "file_id": 2,
+        "content": "    # if config.BACKUP_MODE == BackupMode.incremental:\n    #     incremental_backup_dir = INCREMENTAL_BACKUP_DIR_GENERATOR()\n    #     shutil.move(INPROGRESS_INCREMENTAL_BACKUP_DIR, incremental_backup_dir)\n    # create backup flag.\n    if (\n        config.BACKUP_UPDATE_CHECK_MODE\n        == BackupUpdateCheckMode.commit_and_backup_flag_metadata\n    ):\n        pathlib.Path(BACKUP_FLAG).touch()\n        # use os.path.getmtime(BACKUP_FLAG) to get the latest timestamp\n    else:  # write git hash to flag.\n        with encoding_check_and_backup_context(BACKUP_FLAG):\n            with open(BACKUP_FLAG, \"w+\", encoding=\"utf-8\") as f:\n                git_hash = get_git_head_hash()\n                f.write(git_hash)\n    return success\ndef get_last_backup_commit_hash():\n    _hash = None\n    if os.path.isfile(BACKUP_FLAG):\n        with encoding_check_and_backup_context(BACKUP_FLAG):\n            with open(BACKUP_FLAG, \"r\", encoding=\"utf-8\") as f:\n                _hash = f.read().strip()\n    return _hash\nINF = 1e20\nfrom typing import Optional",
+        "type": "code",
+        "location": "/atomic_commit.py:728-756"
+    },
+    "75": {
+        "file_id": 2,
+        "content": "The code is checking if a backup update is required and creating or updating a backup flag. If the backup update mode is set to \"commit_and_backup_flag_metadata\", it simply touches the backup file to create a timestamp. Otherwise, it writes the current git commit hash to the backup flag file. The function get_last_backup_commit_hash() reads the hash from the backup flag file if it exists.",
+        "type": "comment"
+    },
+    "76": {
+        "file_id": 2,
+        "content": "def get_file_mtime_with_default(fpath: str, default: Optional[float] = None):\n    if os.path.exists(fpath):\n        if os.path.isfile(fpath):\n            return os.path.getmtime(fpath)\n        else:\n            raise Exception(\n                \"Cannot get mtime of file '%s' because non-file object is taking place of it.\"\n                % fpath\n            )\n    else:\n        if default is not None:\n            return default\n        else:\n            raise Exception(\n                \"Cannot get mtime of file '%s' because it does not exist and default mtime is not set.\"\n                % fpath\n            )\ndef atomic_backup():\n    \"\"\"\n    atomic backup:\n    assumed passed fsck\n    1. inprogress check: if has .inprogress folder, just continue backup\n    2. backup integrity check: check if marker equals to git head/status. if not, then backup.\n    \"\"\"\n    need_backup = False\n    success = False\n    if os.path.exists(INPROGRESS_DIR):\n        need_backup = True\n    else:\n        if config.BACKUP_UPDATE_CHECK_MODE == BackupUpdateCheckMode.git_commit_hash:",
+        "type": "code",
+        "location": "/atomic_commit.py:759-793"
+    },
+    "77": {
+        "file_id": 2,
+        "content": "The `get_file_mtime_with_default` function returns the modified time of a file if it exists and is not a non-file object. If the file does not exist or a default mtime is not set, it raises an exception. The `atomic_backup` function checks for the existence of the .inprogress folder and determines whether a backup is needed based on the integrity check involving git commit hash.",
+        "type": "comment"
+    },
+    "78": {
+        "file_id": 2,
+        "content": "            last_backup_commit_hash = get_last_backup_commit_hash()\n            current_commit_hash = get_git_head_hash()\n            if current_commit_hash != last_backup_commit_hash:\n                need_backup = True\n        else:\n            # compare mtime.\n            mtime_backup_flag = get_file_mtime_with_default(BACKUP_FLAG, default=-INF)\n            mtime_commit_flag = get_file_mtime_with_default(COMMIT_FLAG, default=INF)\n            if mtime_commit_flag > mtime_backup_flag:\n                need_backup = True\n    if need_backup:\n        success = backup()\n    else:\n        success = True\n    return success\n#####################################\n# RCLONE BACKUP RESTORATION DIAGRAM #\n#####################################\n#\n# time\n#  |   current   | back_0 | back_1 | back_2 |  state   |\n#  |-------------|--------|--------|--------|----------|\n# 0| a b c       |  *     |  *     |        | *a *b *c |\n# 1|       +d    |        |        |     *  | a b c *d |\n# 2|     -c      |  c     |        |        |  a b d   |",
+        "type": "code",
+        "location": "/atomic_commit.py:794-821"
+    },
+    "79": {
+        "file_id": 2,
+        "content": "Checks if a backup is needed based on the last backup commit hash and file modification times.\nIf the current commit hash differs from the last backup commit hash, or the commit flag's mtime is greater than the backup flag's mtime, perform a backup.\nOtherwise, no backup is needed and set success to True.",
+        "type": "comment"
+    },
+    "80": {
+        "file_id": 2,
+        "content": "# 3|   +b+c      |        |  b     |        | a *b d *c|\n# 4|       -d    |        |        |     d  |  a b    c|\n#\n# unless you make modification records with timestamp per state, you cannot restore every state.\n# you must do more than just using rclone flags.\n# given its complexity, let's not do it.\n#\nCOMMIT_CMD = ...\nif not config.NO_COMMIT:\n    _, COMMIT_CMD = get_script_path_and_exec_cmd(\"commit\")\ndef commit():\n    logger_print(f\"running commit command: {COMMIT_CMD}\")\n    success = False\n    # add_config_success = add_safe_directory()\n    # if add_config_success:\n    return_code = os.system(COMMIT_CMD)\n    assert (\n        return_code == 0\n    ), f\"Failed to execute commit script with exit code {return_code}\"\n    success = True\n    return success\n# TODO: formulate this into a state machine.\nfrom easyprocess import EasyProcess\ndef execute_script_submodule(directory:str):\n    success = False\n    cmd = [sys.executable, SCRIPT_FILENAME]\n    cmd.extend(['--no_commit', 'True', '--submodule', 'True'])\n    with chdir_context(directory):",
+        "type": "code",
+        "location": "/atomic_commit.py:822-855"
+    },
+    "81": {
+        "file_id": 2,
+        "content": "This code is creating a commit command and executing it, but not using modification records with timestamps per state. This makes it impossible to restore every state. The code suggests avoiding this complexity. The \"commit\" function runs the commit command and asserts that it returns an exit code of 0. The \"execute_script_submodule\" function takes a directory parameter, creates a command list containing the Python executable, script filename, \"--no_commit True\", and \"--submodule True\". It then changes to the specified directory before running the command using EasyProcess.",
+        "type": "comment"
+    },
+    "82": {
+        "file_id": 2,
+        "content": "        proc = EasyProcess(cmd).call()\n        ret = proc.return_code\n        success = ret == 0\n        if not success:\n            logger_print(f\"Failed to execute script at directory '{directory}'\")\n    return success\ndef recursive_install_and_execute_script_to_lower_git_directories():\n    success = False\n    candidate_dirs = set()\n    # TODO: skip symlinks\n    for dirpath, dirnames, filenames in os.walk(\".\", followlinks = False):\n        if BACKUP_BASE_DIR not in dirpath and os.path.basename(dirpath) == GITDIR:\n            submodule_dir, _ = os.path.split(dirpath)\n            if submodule_dir != '.':\n                logger_print(f\"adding submodule git directory '{submodule_dir}'\")\n                candidate_dirs.add(submodule_dir)\n    if len(candidate_dirs) == 0:\n        logger_print(f\"no submodule git directory found\")\n        success = True\n    for install_dir in candidate_dirs:\n        logger_print(f\"installing and executing script at submodule '{install_dir}\")\n        success = install_script(install_dir, source_dir = \".\")",
+        "type": "code",
+        "location": "/atomic_commit.py:856-880"
+    },
+    "83": {
+        "file_id": 2,
+        "content": "This function recursively iterates through directories, ignoring symlinks, and checks if the directory contains a git repository. If a git repository is found, it adds the directory to a set of candidate directories. It then attempts to install and execute a script in each candidate directory using the `install_script` function. The function returns True if no submodule git directory was found or if all installs were successful; otherwise, it returns False with an error message for any failed installations.",
+        "type": "comment"
+    },
+    "84": {
+        "file_id": 2,
+        "content": "        if success:\n            success = execute_script_submodule(install_dir) # enable SUBMODULE & NO_COMMIT\n        if not success:\n            raise Exception(f\"submodule execution failed at: '{install_dir}'\")\n    return success\n# TODO: check necessarity of commitment\n# TODO: check if commit is incomplete\ndef atomic_commit():\n    r\"\"\"\n      fsck \n    /      \\\n  succ     fail\n      \\     | rollback (most recent backup)\n  d_comm > d_back? # can be replaced by metadata check or `git rev-parse HEAD` (equivalent to: `git log -1 --format=format:\"%H\"` alongside metadata check with depth=1 (if possible to retrieve from timemachine current backup)\n      | y     | n\n    backup (atomic) & update d_back nothing\n      \\       /\n      need_commit?\n        | y     \\ n\n       commit    exit\n          |\n        fsck\n    succ/  \\fail\n        |   \\_ rollback (most recent backup) & exit\n    incomplete? -(y)- exit\n        | n\n    update d_comm\n      | backup (atomic)\n      | update d_back\n      | exit\n  \"\"\"\n    success = False\n    commit_success = False",
+        "type": "code",
+        "location": "/atomic_commit.py:881-915"
+    },
+    "85": {
+        "file_id": 2,
+        "content": "This code appears to be a function called `atomic_commit` which is responsible for managing the atomic commit of a submodule. The function checks if a successful execution of the submodule occurred, and then performs various tasks based on whether the submodule was executed successfully or not. It also includes TODO comments suggesting further improvements such as checking the necessity of commitment and whether the commit is incomplete.",
+        "type": "comment"
+    },
+    "86": {
+        "file_id": 2,
+        "content": "    commit_hash_changed = False\n    # add_safe_directory()\n    detect_upstream_branch_and_add_safe_directory()\n    # add_config_success = add_safe_directory()\n    # if not add_config_success:\n    #     logger_print(\"failed to add safe directory\")\n    #     return success\n    # now we recursively install and execute this script (skipping commit) to lower `.git` directories, skipping symbolic links\n    if not config.SUBMODULE:\n        recursive_install_and_execute_script_to_lower_git_directories()\n    can_commit = atomic_commit_common()\n    if config.NO_COMMIT:\n        logger_print(\"skipping commit action because configuration\")\n        return can_commit\n    if can_commit:\n        status = get_repo_status()\n        if status.need_to_run_commitment_script():\n            hash_before = get_git_head_hash()\n            commit_success = commit()\n            hash_after = get_git_head_hash()\n            commit_hash_changed = hash_after != hash_before\n            if not commit_success:\n                return success\n        else:",
+        "type": "code",
+        "location": "/atomic_commit.py:916-943"
+    },
+    "87": {
+        "file_id": 2,
+        "content": "This code checks if a commit should be made by first determining whether the user has specified to skip committing and then verifying if there are any changes that need committing. If so, it proceeds to commit and checks if the commit changed anything before returning success or failure.",
+        "type": "comment"
+    },
+    "88": {
+        "file_id": 2,
+        "content": "            logger_print(\n                \"Repo status:\", status, \"No need to run commit script\", \"Exiting\"\n            )\n            success = True\n            return success\n    finalize_commit_success = atomic_commit_common(\n        post_commit=True,\n        commit_success=commit_success,\n        commit_hash_changed=commit_hash_changed,\n    )\n    if finalize_commit_success:\n        success = True\n    return success\ndef atomic_commit_common(\n    post_commit=False, commit_success=..., commit_hash_changed=...\n):\n    git_not_corrupted = False\n    can_commit = False\n    # rollback_inprogress = os.path.exists(ROLLBACK_INPROGRESS_FLAG)\n    git_not_corrupted = git_fsck()\n    if post_commit:\n        post_commit_actions(commit_success, commit_hash_changed)\n    if git_not_corrupted:\n        if atomic_backup():\n            can_commit = True\n    elif rollback():\n        can_commit = True\n    else:\n        logger_print(\"Rollback failed, exiting\")\n    return can_commit\ndef post_commit_actions(commit_success, commit_hash_changed):",
+        "type": "code",
+        "location": "/atomic_commit.py:944-982"
+    },
+    "89": {
+        "file_id": 2,
+        "content": "Code chunk 1:\nSets logger_print with messages \"Repo status:\", status, \"No need to run commit script\", and \"Exiting\". Then sets success to True and returns it. This is the end of the function atomic_commit().\n\nCode chunk 2:\nCalls atomic_commit_common() with post_commit set to True, commit_success variable as it is (...), and commit_hash_changed variable as it is (...). Stores the result in finalize_commit_success. If finalize_commit_success is True, sets success to True. Returns success.\n\nCode chunk 3:\nDefines atomic_commit_common() function that takes post_commit, commit_success, and commit_hash_changed as arguments. Sets git_not_corrupted and can_commit to False. Checks if rollback_inprogress exists (flag for rollback in progress). Sets git_not_corrupted to the result of git_fsck() function.\n\nCode chunk 4:\nIf post_commit is True, calls post_commit_actions() with commit_success and commit_hash_changed as arguments. If git_not_corrupted is True, calls atomic_backup(). Sets can_commit to True.\n\nCode chunk 5:\nIf git_not_corrupted is False and rollback doesn't occur, logs \"Rollback failed, exiting\".\n\nCode chunk 6:\nDefines post_commit_actions() function that takes commit_success and commit_hash_changed as arguments.",
+        "type": "comment"
+    },
+    "90": {
+        "file_id": 2,
+        "content": "    if commit_success:\n        if commit_hash_changed:\n            pathlib.Path(COMMIT_FLAG).touch()\n        else:\n            status = get_repo_status()\n            logger_print(\"Repo status:\", status)\n            if status.need_to_run_commitment_script():\n                logger_print(\"Incomplete commitment detected.\")\n            raise Exception(\"Commitment failed.\")\nif __name__ == \"__main__\":\n    with filelock.FileLock(LOCKFILE, timeout=LOCK_TIMEOUT) as lockfile:\n        try:\n            success = atomic_commit()\n            if not success:\n                raise Exception(\"Failed to perform atomic commit.\")\n            else:\n                logger_print(\"Cleaning up after successful commit:\")\n                os.system(PRUNE_NOW)\n        except NoUpstreamBranchException as e:\n            logger_print(e)\n            logger_print(\"No upstream branch, skipping post-commit actions.\")\n            logger_print(\"Rolling back now.\")\n            success = rollback()\n            if not success:\n                raise Exception(\"Failed to rollback after failed to detect upstream branch.\")",
+        "type": "code",
+        "location": "/atomic_commit.py:983-1009"
+    },
+    "91": {
+        "file_id": 2,
+        "content": "This code performs an atomic commit in a Git repository. If the commit is successful and the hash has changed, it sets a flag indicating a successful commit. Otherwise, it gets the repo status, checks if there's an incomplete commitment, and raises an exception. In the main block, it acquires a lock, tries to perform the atomic commit, cleans up after success, or skips post-commit actions and rolls back if there's no upstream branch.",
+        "type": "comment"
+    },
+    "92": {
+        "file_id": 3,
+        "content": "/commit.cmd",
+        "type": "filepath"
+    },
+    "93": {
+        "file_id": 3,
+        "content": "Updates the git repository by pulling changes from origin, adding all files, committing with \"update\" message, and pushing to origin.",
+        "type": "summary"
+    },
+    "94": {
+        "file_id": 3,
+        "content": "@REM git config --global --add safe.directory E:/works/git_atomic_commit\ngit pull origin main\ngit add .\ngit commit -m \"update\"\ngit push origin main",
+        "type": "code",
+        "location": "/commit.cmd:1-5"
+    },
+    "95": {
+        "file_id": 3,
+        "content": "Updates the git repository by pulling changes from origin, adding all files, committing with \"update\" message, and pushing to origin.",
+        "type": "comment"
+    },
+    "96": {
+        "file_id": 4,
+        "content": "/config_utils.py",
+        "type": "filepath"
+    },
+    "97": {
+        "file_id": 4,
+        "content": "The code defines classes and methods for DotEnv parsing, ensuring dataclass compatibility and retrieving configuration using specific manager and data classes.",
+        "type": "summary"
+    },
+    "98": {
+        "file_id": 4,
+        "content": "from log_utils import logger_print\n\"\"\"\nReserved shell env keyword:\n    DOTENV\nReserved commandline argument:\n    --dotenv\nReserved config file env keyword:\n    IMPORT\nDescription:\n    Provide tools for parsing shell and config file environment variables.\n\"\"\"\nimport os\nimport Levenshtein  # to detect suspicious mistypings\nfrom pydantic import BaseModel\nfrom exception_utils import ExceptionManager\nfrom typing import Union\nfrom argparse_utils import ArgumentTransformer\nsuspicous_threshold = 3\n# for names in between environ attribute name definitions, this would be suspicious_threshold*2\n# raise exception for any shell env var that is not present but similar to predefined vars, with hints of suspected predefined var name.\n# raise exception for any shell/file config env var that is not present in the predefined vars, with hints of suspected predefined var name.\nmin_envname_length_threshold = 6\ndef getBaseModelPropertyKeys(bm: BaseModel):\n    return list(bm.schema()[\"properties\"].keys())\nclass EnvBaseModel(BaseModel):",
+        "type": "code",
+        "location": "/config_utils.py:1-35"
+    },
+    "99": {
+        "file_id": 4,
+        "content": "The code defines a class EnvBaseModel that inherits from BaseModel and provides tools for parsing shell and config file environment variables. It also sets the suspicious threshold as 3, indicating the maximum number of typographical errors allowed to raise a suspicious detection hint. The minimum length of an envname is set at 6 characters, below which it would be considered suspicious. The function getBaseModelPropertyKeys returns the list of properties in a BaseModel object.",
+        "type": "comment"
+    }
+}

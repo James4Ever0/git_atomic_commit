@@ -1,0 +1,12 @@
+.gitignore
+.fdignore
+__pycache__
+*.pyc
+.*
+*/.*
+LICENSE
+*.log
+logs
+commit.sh
+# commit.cmd
+docs

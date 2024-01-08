@@ -1,0 +1,10 @@
+{
+    "summary": "This function allows for exceptional print statements that won't be replaced by logging statements.",
+    "details": [
+        {
+            "comment": "This function allows for exceptional print statements that won't be replaced by logging statements.",
+            "location": "\"/media/root/Toshiba XG3/works/git_atomic_commit/docs/src/exceptional_print.py\":0-1",
+            "content": "def exprint(*args, **kwargs): # provide exceptional print statements which won't be replaced by logging statements\n    print(*args, **kwargs)"
+        }
+    ]
+}

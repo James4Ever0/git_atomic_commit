@@ -1,0 +1,10 @@
+{
+    "summary": "This code is a requirements.txt file, listing the necessary Python packages for the project.",
+    "details": [
+        {
+            "comment": "This code is a requirements.txt file, listing the necessary Python packages for the project.",
+            "location": "\"/media/root/Toshiba XG3/works/git_atomic_commit/docs/src/requirements.txt\":0-8",
+            "content": "pydantic\nrich\nschedule\nbetter-exceptions\npython-dotenv\nlevenshtein\nfilelock\npytz\nsimple-file-checksum"
+        }
+    ]
+}
